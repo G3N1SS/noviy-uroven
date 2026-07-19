@@ -1,7 +1,9 @@
-import { Application, Container, Text } from 'pixi.js'
+import { Application, Container, Graphics, Text } from 'pixi.js'
 import { balance } from '../config/balance'
 import { createPlayer } from '../entities/player'
 import { Spawner } from '../systems/spawner'
+import { CrystalManager } from '../systems/crystals'
+import { drawCrystal } from '../entities/crystal'
 import { ControlsManager } from '../controls/controlsManager'
 import { createPauseMenu } from '../controls/pauseMenu'
 
@@ -38,10 +40,15 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   const platformLayer = new Container()
   world.addChild(platformLayer)
 
+  // Кристаллы — над платформами, под игроком.
+  const crystalLayer = new Container()
+  world.addChild(crystalLayer)
+
   const player = createPlayer()
   world.addChild(player.view)
 
   const spawner = new Spawner(platformLayer)
+  const crystals = new CrystalManager(crystalLayer)
   const controls = new ControlsManager(app.canvas)
   // Меню паузы (по ТЗ выбор управления живёт на паузе). reset() — hoisted-функция ниже.
   const pauseMenu = createPauseMenu({
@@ -75,9 +82,20 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   hud.y = 12
   app.stage.addChild(hud)
 
+  // Счётчик кристаллов справа-сверху (ромб-иконка + число). Число right-anchored.
+  const crystalIcon = new Graphics()
+  drawCrystal({ view: crystalIcon, x: 0, y: 0, value: 0, radius: 10, active: true }, false)
+  const crystalHud = new Text({
+    text: '0',
+    style: { fill: 0xffffff, fontFamily: 'Manrope, sans-serif', fontSize: 30, fontWeight: '800' },
+  })
+  crystalHud.anchor.set(1, 0)
+  app.stage.addChild(crystalIcon, crystalHud)
+
   // --- состояние партии ---
   let cameraOffset = 0
   let minY = 0 // самая большая высота (наименьший y) за партию — для счёта
+  let crystalTotal = 0 // кошелёк: НЕ обнуляется при смерти (кристаллы сохраняются)
 
   const { radius: r } = balance.player
   const { maxHorizontalSpeed, horizontalDampingPerSec } = balance.physics
@@ -101,6 +119,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     cameraOffset = h * balance.camera.followRatio
     minY = 0
     spawner.reset(balance.start.platformOffsetY, w)
+    crystals.reset(balance.start.platformOffsetY) // кошелёк crystalTotal НЕ трогаем
     controls.reset() // калибровка нуля наклона на старте партии
   }
 
@@ -155,17 +174,31 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     if (targetOffset > cameraOffset) cameraOffset = targetOffset
     world.y = cameraOffset
 
-    // 6) Генерация/чистка + динамика типов (движение/разрушение/удаление)
+    // 6) Генерация/чистка платформ + кристаллов
     spawner.update(cameraOffset, w, h, dtSec)
+    crystals.update(cameraOffset, w, h)
 
-    // 7) Счёт (высота в метрах)
+    // 7) Сбор кристаллов пролётом
+    const got = crystals.collect(player.x, player.y, r)
+    if (got > 0) {
+      crystalTotal += got
+      crystalHud.text = `${crystalTotal}`
+    }
+
+    // 8) Счёт (высота в метрах)
     if (player.y < minY) minY = player.y
     hud.text = `${Math.floor(-minY / balance.score.pxPerMeter)} m`
 
-    // 8) Смерть: ушёл за нижний край → рестарт (камера вниз не едет)
+    // 9) HUD-позиции (справа-сверху): число прижато к правому краю, иконка слева от него
+    crystalHud.x = w - 16
+    crystalHud.y = 12
+    crystalIcon.x = w - 16 - crystalHud.width - 14
+    crystalIcon.y = 26
+
+    // 10) Смерть: ушёл за нижний край → рестарт (камера вниз не едет)
     if (player.y + cameraOffset > h + r) reset()
 
-    // 9) Синхронизация вью
+    // 11) Синхронизация вью
     player.view.x = player.x
     player.view.y = player.y
   }
@@ -209,6 +242,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     app,
     player,
     spawner,
+    crystals,
     controls,
     keys,
     state: () => ({
@@ -218,6 +252,8 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       cameraOffset: Math.round(cameraOffset),
       platforms: spawner.platforms.length,
       height: Math.floor(-minY / balance.score.pxPerMeter),
+      crystalTotal,
+      crystalsOnField: crystals.crystals.length,
     }),
     pause: () => app.ticker.stop(),
     resume: () => app.ticker.start(),

@@ -41,6 +41,9 @@
     "cullBelowScreens": 1
   },
   "crystals": {
+    "smallRadius": 9,
+    "largeRadius": 14,
+    "chainGapPx": 42,
     "small": { "value": 1, "everyPlatforms": 5, "chainMin": 3, "chainMax": 5 },
     "large": { "value": 5, "everyPlatforms": 50 }
   },
