@@ -187,6 +187,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       const currBottom = player.y + r
       for (const p of spawner.platforms) {
         if (!p.active) continue
+        if (p.type === 'rrl' && p.collapseTimer >= 0) continue // уже разрушается — не опора
         const top = p.y
         const crossedTop = prevBottom <= top && currBottom >= top
         const withinX = Math.abs(player.x - p.x) <= p.width / 2 + r * 0.4

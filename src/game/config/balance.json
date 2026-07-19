@@ -28,7 +28,7 @@
     "typeWeights": { "vols": 70, "rrl": 15, "moving": 15, "fake": 12 },
     "types": {
       "vols": {},
-      "rrl": { "collapseMs": 300 },
+      "rrl": { "collapseMs": 300, "trembleAmp": 0.8 },
       "moving": { "speedMinPerSec": 60, "speedMaxPerSec": 160 }
     }
   },

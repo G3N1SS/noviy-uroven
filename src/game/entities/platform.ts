@@ -49,8 +49,10 @@ export function drawPlatform(p: Platform): void {
 
   switch (p.type) {
     case 'rrl':
-      // шаткая — маджента-контур
-      g.roundRect(-w / 2, 0, w, h, 4).stroke({ color: 0xff3495, width: 3 })
+      // шаткая — маджента-контур + еле заметная заливка. Дрожь/мерцание idle и разлёт
+      // осколков — в спавнере (per-frame); тут рисуем базовый вид.
+      g.roundRect(-w / 2, 0, w, h, 4).fill({ color: 0xff3495, alpha: 0.1 })
+      g.roundRect(-w / 2, 0, w, h, 4).stroke({ color: 0xff3495, width: 2.5 })
       break
     case 'moving':
       // белая со «стрелками» по краям (плейсхолдер)
@@ -65,6 +67,29 @@ export function drawPlatform(p: Platform): void {
     default:
       g.roundRect(-w / 2, 0, w, h, 4).fill({ color: 0xffffff })
       break
+  }
+}
+
+/**
+ * Разрушение РРЛ: контур распадается на 3 маджента-осколка, которые за `progress` 0→1
+ * разлетаются вниз-в стороны и гаснут. Перерисовывается каждый кадр во время коллапса.
+ */
+export function drawRrlShatter(p: Platform, progress: number): void {
+  const h = balance.platforms.height
+  const w = p.width
+  const pieces = 3
+  const pw = w / pieces
+  const g = p.view.clear()
+  const alpha = (1 - progress) * 0.9
+  for (let i = 0; i < pieces; i++) {
+    const x0 = -w / 2 + i * pw
+    const drift = (i - 1) * progress * 16 // разлёт в стороны
+    const fall = progress * progress * 34 * (0.6 + 0.3 * i) // падение (ускорение)
+    g.roundRect(x0 + drift, fall, pw - 3, h, 3).stroke({
+      color: 0xff3495,
+      width: 2.5,
+      alpha,
+    })
   }
 }
 

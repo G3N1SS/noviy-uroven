@@ -4,6 +4,7 @@ import {
   createPlatform,
   drawPlatform,
   drawFakeHologram,
+  drawRrlShatter,
   type Platform,
   type PlatformType,
 } from '../entities/platform'
@@ -49,13 +50,27 @@ export class Spawner {
           p.vx = -Math.abs(p.vx)
         }
         p.view.x = p.x
-      } else if (p.type === 'rrl' && p.collapseTimer >= 0) {
-        p.collapseTimer -= dtSec
-        const full = balance.platforms.types.rrl.collapseMs / 1000
-        p.view.alpha = Math.max(0.15, p.collapseTimer / full) // угасание
-        if (p.collapseTimer <= 0) {
-          p.active = false
-          p.view.visible = false
+      } else if (p.type === 'rrl') {
+        if (p.collapseTimer >= 0) {
+          // разрушение: осколки разлетаются за collapseMs
+          p.collapseTimer -= dtSec
+          const total = balance.platforms.types.rrl.collapseMs / 1000
+          const progress = Math.min(1, 1 - p.collapseTimer / total)
+          p.view.x = p.x
+          p.view.y = p.y
+          p.view.alpha = 1
+          drawRrlShatter(p, progress)
+          if (p.collapseTimer <= 0) {
+            p.active = false
+            p.view.visible = false
+          }
+        } else {
+          // idle: тонкая дрожь (косметика, коллизия по p.x) + лёгкое мерцание
+          p.animT += dtSec
+          const amp = balance.platforms.types.rrl.trembleAmp
+          p.view.x = p.x + Math.sin(p.animT * 47) * amp + Math.sin(p.animT * 31) * amp * 0.4
+          p.view.y = p.y + Math.cos(p.animT * 53) * amp * 0.6
+          p.view.alpha = 0.82 + 0.18 * (0.5 + 0.5 * Math.sin(p.animT * 9))
         }
       } else if (p.type === 'fake') {
         // голограмма: переливание цельная ↔ двоящийся контур
