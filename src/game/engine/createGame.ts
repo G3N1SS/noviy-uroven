@@ -98,7 +98,9 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
 
   reset()
 
-  const tick = () => {
+  // Один фиксированный шаг симуляции (1/60 c). Все прибавки скорости — «на шаг»,
+  // поэтому скорость игры одинакова при любом FPS экрана (см. frame ниже).
+  const simulate = () => {
     const w = app.screen.width
     const h = app.screen.height
 
@@ -156,7 +158,28 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     player.view.y = player.y
   }
 
-  app.ticker.add(tick)
+  // Фиксированный шаг: копим реальное время и прогоняем simulate() ровно по 1/60 c.
+  // Так на 60/120/144 Гц игра идёт с одинаковой скоростью. MAX_STEPS — защита от
+  // «спирали смерти» при больших лагах (просадка/возврат из фона).
+  const FIXED_DT = 1000 / 60
+  const MAX_STEPS = 5
+  let accumulator = 0
+
+  const advance = (deltaMS: number): number => {
+    accumulator += deltaMS
+    let steps = 0
+    while (accumulator >= FIXED_DT && steps < MAX_STEPS) {
+      simulate()
+      accumulator -= FIXED_DT
+      steps++
+    }
+    if (steps >= MAX_STEPS) accumulator = 0
+    return steps
+  }
+
+  const frame = () => advance(app.ticker.deltaMS)
+
+  app.ticker.add(frame)
 
   // DEV-объект для отладки/тюнинга. На window.__game его вешает GameCanvas — и только
   // для живого инстанса (StrictMode монтирует дважды и один инстанс уничтожается).
@@ -176,14 +199,16 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     }),
     pause: () => app.ticker.stop(),
     resume: () => app.ticker.start(),
-    /** Прогнать N игровых кадров вручную (для проверки логики без rAF). */
+    /** Прогнать N фиксированных шагов симуляции вручную (для проверки логики без rAF). */
     step: (n = 1) => {
-      for (let i = 0; i < n; i++) tick()
+      for (let i = 0; i < n; i++) simulate()
     },
+    /** Прогнать драйвер кадра с заданным deltaMS (для проверки независимости от FPS). */
+    advance,
   }
 
   const destroy = () => {
-    app.ticker.remove(tick)
+    app.ticker.remove(frame)
     window.removeEventListener('keydown', onKeyDown)
     window.removeEventListener('keyup', onKeyUp)
     controls.destroy()
