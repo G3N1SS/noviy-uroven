@@ -55,6 +55,17 @@ export function drawPlatform(p: Platform): void {
       g.rect(-w / 2 + 6, h / 2 - 2, 7, 4).fill({ color: 0x000000 })
       g.rect(w / 2 - 13, h / 2 - 2, 7, 4).fill({ color: 0x000000 })
       break
+    case 'fake': {
+      // «почти как ВОЛС», но пунктирная и чуть тусклее — тонкая подсказка о ненадёжности.
+      // Явную подсветку даст SafeWall (бустер).
+      const seg = 12
+      const gap = 5
+      for (let sx = -w / 2; sx < w / 2; sx += seg + gap) {
+        const sw = Math.min(seg, w / 2 - sx)
+        g.roundRect(sx, 0, sw, h, 3).fill({ color: 0xffffff, alpha: 0.7 })
+      }
+      break
+    }
     case 'vols':
     default:
       g.roundRect(-w / 2, 0, w, h, 4).fill({ color: 0xffffff })
