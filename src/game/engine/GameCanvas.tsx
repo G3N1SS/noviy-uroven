@@ -22,10 +22,14 @@ export function GameCanvas() {
         return
       }
       handle = h
+      if (import.meta.env.DEV) Reflect.set(globalThis, '__game', h.debug)
     })
 
     return () => {
       cancelled = true
+      if (import.meta.env.DEV && handle && Reflect.get(globalThis, '__game') === handle.debug) {
+        Reflect.deleteProperty(globalThis, '__game')
+      }
       handle?.destroy()
       handle = null
     }

@@ -3,11 +3,13 @@ import { balance } from '../config/balance'
 import { createPlayer } from '../entities/player'
 import { Spawner } from '../systems/spawner'
 import { ControlsManager } from '../controls/controlsManager'
-import { createControlSwitch } from '../controls/controlSwitchUI'
+import { createPauseMenu } from '../controls/pauseMenu'
 
 export interface GameHandle {
   app: Application
   destroy: () => void
+  /** DEV-объект для отладки/тюнинга. GameCanvas вешает его на window.__game (только живой инстанс). */
+  debug: unknown
 }
 
 /**
@@ -41,7 +43,16 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
 
   const spawner = new Spawner(platformLayer)
   const controls = new ControlsManager(app.canvas)
-  const controlSwitch = createControlSwitch(controls)
+  // Меню паузы (по ТЗ выбор управления живёт на паузе). reset() — hoisted-функция ниже.
+  const pauseMenu = createPauseMenu({
+    controls,
+    onPause: () => app.ticker.stop(),
+    onResume: () => app.ticker.start(),
+    onRestart: () => {
+      reset()
+      app.ticker.start()
+    },
+  })
 
   // Клавиши ←/→ (A/D) — удобство для теста на десктопе, поверх выбранной схемы.
   const keys = { left: false, right: false }
@@ -147,31 +158,28 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
 
   app.ticker.add(tick)
 
-  // DEV-хук для отладки и цикла тюнинга физики (в прод-сборку не попадает).
-  if (import.meta.env.DEV) {
-    Object.assign(globalThis, {
-      __game: {
-        app,
-        player,
-        spawner,
-        controls,
-        keys,
-        state: () => ({
-          x: Math.round(player.x),
-          y: Math.round(player.y),
-          vy: Math.round(player.vy * 100) / 100,
-          cameraOffset: Math.round(cameraOffset),
-          platforms: spawner.platforms.length,
-          height: Math.floor(-minY / balance.score.pxPerMeter),
-        }),
-        pause: () => app.ticker.stop(),
-        resume: () => app.ticker.start(),
-        /** Прогнать N игровых кадров вручную (для проверки логики без rAF). */
-        step: (n = 1) => {
-          for (let i = 0; i < n; i++) tick()
-        },
-      },
-    })
+  // DEV-объект для отладки/тюнинга. На window.__game его вешает GameCanvas — и только
+  // для живого инстанса (StrictMode монтирует дважды и один инстанс уничтожается).
+  const debug = {
+    app,
+    player,
+    spawner,
+    controls,
+    keys,
+    state: () => ({
+      x: Math.round(player.x),
+      y: Math.round(player.y),
+      vy: Math.round(player.vy * 100) / 100,
+      cameraOffset: Math.round(cameraOffset),
+      platforms: spawner.platforms.length,
+      height: Math.floor(-minY / balance.score.pxPerMeter),
+    }),
+    pause: () => app.ticker.stop(),
+    resume: () => app.ticker.start(),
+    /** Прогнать N игровых кадров вручную (для проверки логики без rAF). */
+    step: (n = 1) => {
+      for (let i = 0; i < n; i++) tick()
+    },
   }
 
   const destroy = () => {
@@ -179,9 +187,9 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     window.removeEventListener('keydown', onKeyDown)
     window.removeEventListener('keyup', onKeyUp)
     controls.destroy()
-    controlSwitch.destroy()
+    pauseMenu.destroy()
     app.destroy(true, { children: true })
   }
 
-  return { app, destroy }
+  return { app, destroy, debug }
 }
