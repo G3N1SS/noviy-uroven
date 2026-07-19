@@ -1,0 +1,9 @@
+# Единые переводы строк во всём проекте (работа с 3 устройств)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.mp3 binary
+*.ogg binary

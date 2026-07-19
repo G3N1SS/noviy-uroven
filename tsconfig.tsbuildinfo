@@ -1,1 +1,0 @@
-{"root":["./src/main.tsx","./src/vite-env.d.ts","./src/app/app.tsx","./src/game/config/balance.ts","./src/game/engine/gamecanvas.tsx","./src/game/engine/creategame.ts"],"errors":true,"version":"5.9.3"}
