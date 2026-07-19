@@ -43,8 +43,8 @@ export class TouchController implements Controller {
     if (this.mode === 'zones') {
       return this.pointerX < screenW / 2 ? -maxSpeed : maxSpeed
     }
-    // follow
-    const vx = (this.pointerX - playerX) * balance.input.followFactor
+    // follow (vx в px/сек)
+    const vx = (this.pointerX - playerX) * balance.input.followGainPerSec
     return Math.max(-maxSpeed, Math.min(maxSpeed, vx))
   }
 

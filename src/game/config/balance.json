@@ -1,10 +1,12 @@
 {
+  "jump": {
+    "heightPx": 205,
+    "riseSec": 0.43,
+    "superHeightPx": 300
+  },
   "physics": {
-    "gravity": 0.29,
-    "jumpImpulse": -11,
-    "superJumpImpulse": -16.5,
-    "maxHorizontalSpeed": 8,
-    "horizontalDamping": 0.92,
+    "maxHorizontalSpeed": 720,
+    "horizontalDampingPerSec": 0.00055,
     "wrapHorizontal": true
   },
   "player": {
@@ -54,7 +56,7 @@
     "pxPerMeter": 10
   },
   "input": {
-    "followFactor": 0.25
+    "followGainPerSec": 22.5
   },
   "start": {
     "platformOffsetY": 120

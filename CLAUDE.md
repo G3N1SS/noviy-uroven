@@ -108,6 +108,6 @@ src/
 
 **DEV-хук:** в dev-сборке доступен `window.__game` (`state()`, `step(n)`, `pause/resume`, `player`, `spawner`, `input`) — для отладки и тюнинга. В прод не попадает.
 
-**Fixed timestep:** физика идёт фиксированными шагами 1/60 c через аккумулятор реального времени (`simulate()` + `advance(deltaMS)` в createGame), MAX_STEPS=5. Скорость игры НЕ зависит от FPS экрana (проверено: 60 шагов/сек при 30/60/90/144 fps). Числа физики в balance.json тюнятся на базе 60 Гц.
+**Физика в реальном времени (frame-rate independent):** скорости в px/сек, ускорение px/сек²; интегрируем semi-implicit Euler фиксированным шагом `dtSec = 1/simHz`. Время кадра берём из `performance.now()` (НЕ `ticker.deltaMS`), аккумулятор + MAX_STEPS. Скорость игры не зависит НИ от FPS экрана, НИ от `simHz` (проверено wall-clock: 1.28М вызовов frame() за 300мс → 27 шагов = 90/сек). **Два независимых рычага тюнинга в balance.json: `jump.heightPx` (высота) и `jump.riseSec` (темп).** gravity/jumpVel выводятся из них. `physics.maxHorizontalSpeed` в px/сек, `input.followGainPerSec` — gain follow.
 
 **Прим.:** rAF в фоновой вкладке браузер-автоматизации заморожен, поэтому логику проверяем через `__game.step(n)` (шаги simulate) или `__game.advance(ms)`, а визуал — на реальном устройстве по LAN-URL.

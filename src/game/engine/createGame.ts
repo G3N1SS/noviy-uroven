@@ -80,7 +80,15 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   let minY = 0 // самая большая высота (наименьший y) за партию — для счёта
 
   const { radius: r } = balance.player
-  const { gravity, jumpImpulse, maxHorizontalSpeed, horizontalDamping } = balance.physics
+  const { maxHorizontalSpeed, horizontalDampingPerSec } = balance.physics
+
+  // Физика в реальном времени: скорости px/сек, ускорение px/сек². Симуляция фиксированным
+  // шагом dtSec — поэтому скорость игры не зависит НИ от FPS экрана, НИ от simHz.
+  // Два независимых рычага: высота прыжка (heightPx) и темп (riseSec — время до апекса).
+  const dtSec = 1 / balance.loop.simHz
+  const gravity = (2 * balance.jump.heightPx) / (balance.jump.riseSec * balance.jump.riseSec)
+  const jumpVel = (2 * balance.jump.heightPx) / balance.jump.riseSec // величина импульса вверх, px/сек
+  const dampingStep = Math.pow(horizontalDampingPerSec, dtSec)
 
   function reset() {
     const w = app.screen.width
@@ -89,7 +97,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     player.y = 0
     player.prevY = 0
     player.vx = 0
-    player.vy = jumpImpulse // стартовый «пинок» вверх, чтобы сразу было живо
+    player.vy = -jumpVel // стартовый «пинок» вверх (px/сек)
     cameraOffset = h * balance.camera.followRatio
     minY = 0
     spawner.reset(balance.start.platformOffsetY, w)
@@ -109,14 +117,14 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     const keyDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0)
     let vx: number | null = keyDir !== 0 ? keyDir * maxHorizontalSpeed : null
     if (vx === null) vx = controls.update(player.x, w, maxHorizontalSpeed)
-    if (vx === null) player.vx *= horizontalDamping
+    if (vx === null) player.vx *= dampingStep
     else player.vx = vx
 
-    // 2) Интегрирование
+    // 2) Интегрирование (semi-implicit Euler в реальном времени)
     player.prevY = player.y
-    player.vy += gravity
-    player.x += player.vx
-    player.y += player.vy
+    player.vy += gravity * dtSec
+    player.x += player.vx * dtSec
+    player.y += player.vy * dtSec
 
     // 3) Горизонтальный wrap
     if (player.x < -r) player.x = w + r
@@ -132,7 +140,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
         const withinX = Math.abs(player.x - p.x) <= p.width / 2 + r * 0.4
         if (crossedTop && withinX) {
           player.y = top - r
-          player.vy = jumpImpulse // автопрыжок
+          player.vy = -jumpVel // автопрыжок
           break
         }
       }
@@ -178,7 +186,16 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     return steps
   }
 
-  const frame = () => advance(app.ticker.deltaMS)
+  // Время берём из performance.now() (стенные часы), а не из ticker.deltaMS — надёжнее
+  // и не зависит от того, как Pixi считает дельту на разных экранах.
+  let lastTime = performance.now()
+  const frame = () => {
+    const now = performance.now()
+    let delta = now - lastTime
+    lastTime = now
+    if (delta > 100) delta = 100 // клампим большие провалы (сворачивание вкладки/лаг)
+    return advance(delta)
+  }
 
   app.ticker.add(frame)
 
@@ -206,6 +223,8 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     },
     /** Прогнать драйвер кадра с заданным deltaMS (для проверки независимости от FPS). */
     advance,
+    /** Полный кадр (время из performance.now()); возвращает число шагов симуляции. */
+    frame,
   }
 
   const destroy = () => {
