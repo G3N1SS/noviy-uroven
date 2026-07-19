@@ -48,7 +48,7 @@
       "controlLockSec": 0.5,
       "spawnEveryPx": 820
     },
-    "fake": { "startMeters": 1500 }
+    "fake": { "startMeters": 1500, "shimmerSec": 2.8 }
   },
   "crystals": {
     "smallRadius": 9,

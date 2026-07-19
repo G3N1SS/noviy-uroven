@@ -1,6 +1,12 @@
 import { Container } from 'pixi.js'
 import { balance } from '../config/balance'
-import { createPlatform, drawPlatform, type Platform, type PlatformType } from '../entities/platform'
+import {
+  createPlatform,
+  drawPlatform,
+  drawFakeHologram,
+  type Platform,
+  type PlatformType,
+} from '../entities/platform'
 
 /**
  * Генерация платформ (Этап 2, инкремент 1): 4 типа с весами + гарантированная ВОЛС
@@ -51,6 +57,10 @@ export class Spawner {
           p.active = false
           p.view.visible = false
         }
+      } else if (p.type === 'fake') {
+        // голограмма: переливание цельная ↔ двоящийся контур
+        p.animT += dtSec
+        drawFakeHologram(p)
       }
     }
 
@@ -137,6 +147,7 @@ export class Spawner {
     p.active = true
     p.collapseTimer = -1
     p.vx = 0
+    p.animT = Math.random() * balance.obstacles.fake.shimmerSec // десинхрон голограмм
     p.view.visible = true
     p.view.alpha = 1
     p.view.x = x

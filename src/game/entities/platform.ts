@@ -24,6 +24,8 @@ export interface Platform {
   vx: number
   /** rrl: сек до разрушения после касания; <0 — ещё не тронута */
   collapseTimer: number
+  /** fake: фаза анимации-голограммы (сек), у каждой платформы свой сдвиг */
+  animT: number
 }
 
 export function createPlatform(): Platform {
@@ -36,6 +38,7 @@ export function createPlatform(): Platform {
     active: false,
     vx: 0,
     collapseTimer: -1,
+    animT: 0,
   }
 }
 
@@ -55,20 +58,35 @@ export function drawPlatform(p: Platform): void {
       g.rect(-w / 2 + 6, h / 2 - 2, 7, 4).fill({ color: 0x000000 })
       g.rect(w / 2 - 13, h / 2 - 2, 7, 4).fill({ color: 0x000000 })
       break
-    case 'fake': {
-      // «почти как ВОЛС», но пунктирная и чуть тусклее — тонкая подсказка о ненадёжности.
-      // Явную подсветку даст SafeWall (бустер).
-      const seg = 12
-      const gap = 5
-      for (let sx = -w / 2; sx < w / 2; sx += seg + gap) {
-        const sw = Math.min(seg, w / 2 - sx)
-        g.roundRect(sx, 0, sw, h, 3).fill({ color: 0xffffff, alpha: 0.7 })
-      }
+    case 'fake':
+      drawFakeHologram(p)
       break
-    }
     case 'vols':
     default:
       g.roundRect(-w / 2, 0, w, h, 4).fill({ color: 0xffffff })
       break
   }
+}
+
+/**
+ * Фейк-«голограмма»: большую часть цикла — цельная белая (не отличить от ВОЛС),
+ * затем на миг контур двоится (маджента-призрак ↖, белый ↘ — анаглиф) и схлопывается
+ * назад. Перерисовывается каждый кадр по `p.animT`. Форма-намёк «это проекция, не опора».
+ */
+export function drawFakeHologram(p: Platform): void {
+  const h = balance.platforms.height
+  const w = p.width
+  const cycle = balance.obstacles.fake.shimmerSec
+  const t = (p.animT % cycle) / cycle
+  // split 0..1: 0 бо́льшую часть цикла, плавный пик в окне [0.5, 0.9]
+  const split = t > 0.5 && t < 0.9 ? Math.sin(((t - 0.5) / 0.4) * Math.PI) : 0
+
+  const g = p.view.clear()
+  if (split > 0.01) {
+    const ox = 4 * split
+    const oy = 2.5 * split
+    g.roundRect(-w / 2 - ox, -oy, w, h, 4).stroke({ color: 0xff3495, width: 2, alpha: 0.85 * split })
+    g.roundRect(-w / 2 + ox, oy, w, h, 4).stroke({ color: 0xffffff, width: 1.5, alpha: 0.6 * split })
+  }
+  g.roundRect(-w / 2, 0, w, h, 4).fill({ color: 0xffffff, alpha: 1 - 0.28 * split })
 }
