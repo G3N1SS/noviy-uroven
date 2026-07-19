@@ -20,7 +20,7 @@
     "widthBase": 90,
     "widthLate": 70,
     "height": 18,
-    "gapMin": 60,
+    "gapMin": 90,
     "gapMax": 140,
     "maxJumpHeight": 180,
     "types": {
