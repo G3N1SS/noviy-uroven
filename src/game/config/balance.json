@@ -1,8 +1,8 @@
 {
   "physics": {
-    "gravity": 0.385,
-    "jumpImpulse": -12.8,
-    "superJumpImpulse": -19.2,
+    "gravity": 0.29,
+    "jumpImpulse": -11,
+    "superJumpImpulse": -16.5,
     "maxHorizontalSpeed": 8,
     "horizontalDamping": 0.92,
     "wrapHorizontal": true
