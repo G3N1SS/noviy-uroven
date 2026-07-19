@@ -3,6 +3,7 @@ import { balance } from '../config/balance'
 import { createPlayer } from '../entities/player'
 import { Spawner } from '../systems/spawner'
 import { CrystalManager } from '../systems/crystals'
+import { EpochManager } from '../systems/epochs'
 import { drawCrystal } from '../entities/crystal'
 import { ControlsManager } from '../controls/controlsManager'
 import { createPauseMenu } from '../controls/pauseMenu'
@@ -92,6 +93,24 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   crystalHud.anchor.set(1, 0)
   app.stage.addChild(crystalIcon, crystalHud)
 
+  // Баннер перехода эпохи (по центру сверху), дерзким тоном. Скрыт по умолчанию.
+  const banner = new Text({
+    text: '',
+    style: {
+      fill: 0xffffff,
+      fontFamily: 'Manrope, sans-serif',
+      fontSize: 26,
+      fontWeight: '800',
+      align: 'center',
+      wordWrap: true,
+      wordWrapWidth: 320,
+    },
+  })
+  banner.anchor.set(0.5)
+  banner.visible = false
+  app.stage.addChild(banner)
+  const epochs = new EpochManager(app, banner)
+
   // --- состояние партии ---
   let cameraOffset = 0
   let minY = 0 // самая большая высота (наименьший y) за партию — для счёта
@@ -120,6 +139,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     minY = 0
     spawner.reset(balance.start.platformOffsetY, w)
     crystals.reset(balance.start.platformOffsetY) // кошелёк crystalTotal НЕ трогаем
+    epochs.reset() // фон вернётся к эпохе 1 на первом апдейте
     controls.reset() // калибровка нуля наклона на старте партии
   }
 
@@ -187,13 +207,19 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
 
     // 8) Счёт (высота в метрах)
     if (player.y < minY) minY = player.y
-    hud.text = `${Math.floor(-minY / balance.score.pxPerMeter)} m`
+    const heightMeters = -minY / balance.score.pxPerMeter
+    hud.text = `${Math.floor(heightMeters)} m`
 
-    // 9) HUD-позиции (справа-сверху): число прижато к правому краю, иконка слева от него
+    // 8b) Эпохи: смена фона + баннер перехода по высоте
+    epochs.update(heightMeters, dtSec)
+
+    // 9) HUD-позиции: кристаллы справа-сверху, баннер по центру
     crystalHud.x = w - 16
     crystalHud.y = 12
     crystalIcon.x = w - 16 - crystalHud.width - 14
     crystalIcon.y = 26
+    banner.x = w / 2
+    banner.y = h * 0.26
 
     // 10) Смерть: ушёл за нижний край → рестарт (камера вниз не едет)
     if (player.y + cameraOffset > h + r) reset()
@@ -254,6 +280,9 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       height: Math.floor(-minY / balance.score.pxPerMeter),
       crystalTotal,
       crystalsOnField: crystals.crystals.length,
+      epoch: epochs.current,
+      bgColor: app.renderer.background.color.toHex(),
+      banner: banner.visible ? banner.text : null,
     }),
     pause: () => app.ticker.stop(),
     resume: () => app.ticker.start(),

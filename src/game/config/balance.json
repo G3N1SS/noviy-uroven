@@ -67,12 +67,13 @@
   "start": {
     "platformOffsetY": 120
   },
+  "epochTransition": { "crossfadeSec": 1.5, "bannerSec": 2.2 },
   "epochs": [
-    { "id": 1, "name": "2G", "fromMeters": 0, "toMeters": 500 },
-    { "id": 2, "name": "3G", "fromMeters": 500, "toMeters": 1500 },
-    { "id": 3, "name": "LTE", "fromMeters": 1500, "toMeters": 3000 },
-    { "id": 4, "name": "5G", "fromMeters": 3000, "toMeters": 5000 },
-    { "id": 5, "name": "6G", "fromMeters": 5000, "toMeters": null }
+    { "id": 1, "name": "2G", "fromMeters": 0, "toMeters": 500, "bg": "#000000", "banner": "2G. Погнали" },
+    { "id": 2, "name": "3G", "fromMeters": 500, "toMeters": 1500, "bg": "#071018", "banner": "3G. Уже что-то" },
+    { "id": 3, "name": "LTE", "fromMeters": 1500, "toMeters": 3000, "bg": "#14121a", "banner": "LTE достигнут. Можно ускоряться" },
+    { "id": 4, "name": "5G", "fromMeters": 3000, "toMeters": 5000, "bg": "#1a0714", "banner": "5G. Почти космос" },
+    { "id": 5, "name": "6G", "fromMeters": 5000, "toMeters": null, "bg": "#050818", "banner": "Будущее. Ты в нём первый" }
   ],
   "controls": {
     "tilt": {
