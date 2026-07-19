@@ -51,8 +51,12 @@ export class Spawner {
           p.vx = -Math.abs(p.vx)
         }
         p.view.x = p.x
-        // марш ∝ дистанции/направлению, но замедлен коэффициентом (чтобы не рябило)
-        p.animT += p.vx * dtSec * balance.platforms.types.moving.chevronSpeedFactor
+        // плавный разворот: dirVisual едет к знаку vx за chevronFlipSec (стрелки складываются)
+        const m = balance.platforms.types.moving
+        const targetDir = p.vx >= 0 ? 1 : -1
+        p.dirVisual += (targetDir - p.dirVisual) * Math.min(1, dtSec / m.chevronFlipSec)
+        // марш ∝ дистанции, но через dirVisual → на развороте замедляется до нуля и реверсится
+        p.animT += Math.abs(p.vx) * dtSec * m.chevronSpeedFactor * p.dirVisual
         drawMovingChevrons(p)
       } else if (p.type === 'rrl') {
         if (p.collapseTimer >= 0) {
@@ -175,6 +179,7 @@ export class Spawner {
       const m = balance.platforms.types.moving
       const sp = m.speedMinPerSec + Math.random() * (m.speedMaxPerSec - m.speedMinPerSec)
       p.vx = Math.random() < 0.5 ? -sp : sp
+      p.dirVisual = p.vx >= 0 ? 1 : -1 // старт без складывания
       // маска для клипа шевронов по силуэту платформы
       p.maskG.clear().roundRect(-p.width / 2, 0, p.width, balance.platforms.height, 4).fill(0xffffff)
       p.maskG.visible = true

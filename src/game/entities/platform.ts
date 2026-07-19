@@ -26,6 +26,8 @@ export interface Platform {
   collapseTimer: number
   /** fake: фаза голограммы (сек) / moving: накопленная дистанция для марша шевронов */
   animT: number
+  /** moving: плавное «визуальное направление» −1..1 (для мягкого разворота стрелок) */
+  dirVisual: number
   /** маска-скругление для клипа марширующих шевронов (moving). */
   maskG: Graphics
 }
@@ -45,6 +47,7 @@ export function createPlatform(): Platform {
     vx: 0,
     collapseTimer: -1,
     animT: 0,
+    dirVisual: 1,
     maskG,
   }
 }
@@ -83,19 +86,19 @@ export function drawMovingChevrons(p: Platform): void {
   const h = balance.platforms.height
   const w = p.width
   const step = balance.platforms.types.moving.chevronStepPx
-  const dir = p.vx >= 0 ? 1 : -1
+  // animT уже несёт знак направления (через dirVisual), поэтому phase — без множителя dir.
   const phase = ((p.animT % step) + step) % step
   const cw = 5
   const cy = h / 2
   const ch = h * 0.34
+  const tip = cw * p.dirVisual // раскрытие шеврона: >0 вправо, <0 влево, ≈0 — вертикаль (момент разворота)
 
   const g = p.view.clear()
   g.roundRect(-w / 2, 0, w, h, 4).fill({ color: 0xffffff })
   const count = Math.ceil(w / step) + 3
   for (let k = 0; k < count; k++) {
-    const cx = -w / 2 - step + k * step + dir * phase
-    if (dir > 0) g.moveTo(cx, cy - ch).lineTo(cx + cw, cy).lineTo(cx, cy + ch)
-    else g.moveTo(cx, cy - ch).lineTo(cx - cw, cy).lineTo(cx, cy + ch)
+    const cx = -w / 2 - step + k * step + phase
+    g.moveTo(cx, cy - ch).lineTo(cx + tip, cy).lineTo(cx, cy + ch)
   }
   g.stroke({ color: 0x111111, width: 2.5, cap: 'round', join: 'round' })
 }
