@@ -5,6 +5,7 @@ import {
   drawPlatform,
   drawFakeHologram,
   drawRrlShatter,
+  drawMovingChevrons,
   type Platform,
   type PlatformType,
 } from '../entities/platform'
@@ -50,6 +51,8 @@ export class Spawner {
           p.vx = -Math.abs(p.vx)
         }
         p.view.x = p.x
+        p.animT += p.vx * dtSec // марш ∝ пройденной дистанции (и направлению)
+        drawMovingChevrons(p)
       } else if (p.type === 'rrl') {
         if (p.collapseTimer >= 0) {
           // разрушение: осколки разлетаются за collapseMs
@@ -171,6 +174,14 @@ export class Spawner {
       const m = balance.platforms.types.moving
       const sp = m.speedMinPerSec + Math.random() * (m.speedMaxPerSec - m.speedMinPerSec)
       p.vx = Math.random() < 0.5 ? -sp : sp
+      // маска для клипа шевронов по силуэту платформы
+      p.maskG.clear().roundRect(-p.width / 2, 0, p.width, balance.platforms.height, 4).fill(0xffffff)
+      p.maskG.visible = true
+      p.view.mask = p.maskG
+    } else {
+      p.view.mask = null
+      p.maskG.visible = false
+      p.maskG.clear()
     }
     drawPlatform(p)
     this.platforms.push(p)
@@ -181,6 +192,8 @@ export class Spawner {
     p.active = false
     p.view.visible = false
     p.view.alpha = 1
+    p.view.mask = null
+    p.maskG.visible = false
     this.pool.push(p)
   }
 }

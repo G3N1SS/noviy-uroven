@@ -24,13 +24,19 @@ export interface Platform {
   vx: number
   /** rrl: сек до разрушения после касания; <0 — ещё не тронута */
   collapseTimer: number
-  /** fake: фаза анимации-голограммы (сек), у каждой платформы свой сдвиг */
+  /** fake: фаза голограммы (сек) / moving: накопленная дистанция для марша шевронов */
   animT: number
+  /** маска-скругление для клипа марширующих шевронов (moving). */
+  maskG: Graphics
 }
 
 export function createPlatform(): Platform {
+  const view = new Graphics()
+  const maskG = new Graphics()
+  maskG.visible = false
+  view.addChild(maskG) // маска-ребёнок для клипа шевронов у moving
   return {
-    view: new Graphics(),
+    view,
     x: 0,
     y: 0,
     width: balance.platforms.widthBase,
@@ -39,6 +45,7 @@ export function createPlatform(): Platform {
     vx: 0,
     collapseTimer: -1,
     animT: 0,
+    maskG,
   }
 }
 
@@ -55,10 +62,7 @@ export function drawPlatform(p: Platform): void {
       g.roundRect(-w / 2, 0, w, h, 4).stroke({ color: 0xff3495, width: 2.5 })
       break
     case 'moving':
-      // белая со «стрелками» по краям (плейсхолдер)
-      g.roundRect(-w / 2, 0, w, h, 4).fill({ color: 0xffffff })
-      g.rect(-w / 2 + 6, h / 2 - 2, 7, 4).fill({ color: 0x000000 })
-      g.rect(w / 2 - 13, h / 2 - 2, 7, 4).fill({ color: 0x000000 })
+      drawMovingChevrons(p)
       break
     case 'fake':
       drawFakeHologram(p)
@@ -68,6 +72,32 @@ export function drawPlatform(p: Platform): void {
       g.roundRect(-w / 2, 0, w, h, 4).fill({ color: 0xffffff })
       break
   }
+}
+
+/**
+ * Движущаяся: белая база + марширующие чёрные шевроны. Бесшовный конвейер — паттерн
+ * рисуется от −step до width+step и клипается маской платформы (p.maskG), сдвиг = дистанция
+ * платформы (p.animT) по модулю шага. Направление шевронов = знак vx. Перерисовка per-frame.
+ */
+export function drawMovingChevrons(p: Platform): void {
+  const h = balance.platforms.height
+  const w = p.width
+  const step = balance.platforms.types.moving.chevronStepPx
+  const dir = p.vx >= 0 ? 1 : -1
+  const phase = ((p.animT % step) + step) % step
+  const cw = 5
+  const cy = h / 2
+  const ch = h * 0.34
+
+  const g = p.view.clear()
+  g.roundRect(-w / 2, 0, w, h, 4).fill({ color: 0xffffff })
+  const count = Math.ceil(w / step) + 3
+  for (let k = 0; k < count; k++) {
+    const cx = -w / 2 - step + k * step + dir * phase
+    if (dir > 0) g.moveTo(cx, cy - ch).lineTo(cx + cw, cy).lineTo(cx, cy + ch)
+    else g.moveTo(cx, cy - ch).lineTo(cx - cw, cy).lineTo(cx, cy + ch)
+  }
+  g.stroke({ color: 0x111111, width: 2.5, cap: 'round', join: 'round' })
 }
 
 /**
