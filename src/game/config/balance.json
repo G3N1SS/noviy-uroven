@@ -1,0 +1,73 @@
+{
+  "physics": {
+    "gravity": 0.6,
+    "jumpImpulse": -16,
+    "superJumpImpulse": -24,
+    "maxHorizontalSpeed": 8,
+    "horizontalDamping": 0.92,
+    "wrapHorizontal": true
+  },
+  "player": {
+    "radius": 20,
+    "spriteSize": 48,
+    "idleBobAmplitude": 6,
+    "idleBobSpeed": 2
+  },
+  "camera": {
+    "followRatio": 0.6
+  },
+  "platforms": {
+    "widthBase": 90,
+    "widthLate": 70,
+    "height": 18,
+    "gapMin": 60,
+    "gapMax": 140,
+    "maxJumpHeight": 180,
+    "types": {
+      "vols": {},
+      "rrl": { "collapseDelayMs": 300 },
+      "moving": { "speedMin": 1, "speedMax": 3 },
+      "oneshot": {}
+    }
+  },
+  "spawn": {
+    "guaranteedVolsEvery": { "epoch1_2": 3, "epoch3_4": 4, "epoch5": 5 },
+    "spawnAheadScreens": 2,
+    "cullBelowScreens": 1
+  },
+  "crystals": {
+    "small": { "value": 1, "everyPlatforms": 5, "chainMin": 3, "chainMax": 5 },
+    "large": { "value": 5, "everyPlatforms": 50 }
+  },
+  "boosters": {
+    "gigaback": { "durationMs": 10000, "spawnEvery": 40 },
+    "mixxShield": { "spawnEvery": 60 },
+    "eternalMinutes": { "spawnEvery": 80 },
+    "safeWall": { "durationMs": 15000, "spawnEvery": 50 }
+  },
+  "score": {
+    "metersPerPlatform": 10
+  },
+  "epochs": [
+    { "id": 1, "name": "2G", "fromMeters": 0, "toMeters": 500 },
+    { "id": 2, "name": "3G", "fromMeters": 500, "toMeters": 1500 },
+    { "id": 3, "name": "LTE", "fromMeters": 1500, "toMeters": 3000 },
+    { "id": 4, "name": "5G", "fromMeters": 3000, "toMeters": 5000 },
+    { "id": 5, "name": "6G", "fromMeters": 5000, "toMeters": null }
+  ],
+  "controls": {
+    "tilt": {
+      "deadZoneDeg": 3,
+      "fullSpeedDeg": 30,
+      "sensitivity": { "low": 45, "medium": 30, "high": 20 }
+    }
+  },
+  "economy": {
+    "rewards": [
+      { "crystals": 500, "reward": "1 ГБ на тариф" },
+      { "crystals": 1500, "reward": "3 дня MiXX" },
+      { "crystals": 3000, "reward": "скидка 20% на тариф" },
+      { "crystals": 5000, "reward": "10 ГБ + месяц MiXX" }
+    ]
+  }
+}
