@@ -158,11 +158,12 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     player.view.y = player.y
   }
 
-  // Фиксированный шаг: копим реальное время и прогоняем simulate() ровно по 1/60 c.
-  // Так на 60/120/144 Гц игра идёт с одинаковой скоростью. MAX_STEPS — защита от
-  // «спирали смерти» при больших лагах (просадка/возврат из фона).
-  const FIXED_DT = 1000 / 60
-  const MAX_STEPS = 5
+  // Фиксированный шаг симуляции (частота — balance.loop.simHz). Копим реальное время
+  // и прогоняем simulate() ровно по 1/simHz c, поэтому скорость игры не зависит от FPS
+  // экрана. Частота задаёт и темп: 90 Гц = в 1.5× быстрее 60 Гц при той же высоте прыжка.
+  // MAX_STEPS — защита от «спирали смерти» при больших лагах (просадка/возврат из фона).
+  const FIXED_DT = 1000 / balance.loop.simHz
+  const MAX_STEPS = balance.loop.maxStepsPerFrame
   let accumulator = 0
 
   const advance = (deltaMS: number): number => {

@@ -45,6 +45,10 @@
     "eternalMinutes": { "spawnEvery": 80 },
     "safeWall": { "durationMs": 15000, "spawnEvery": 50 }
   },
+  "loop": {
+    "simHz": 90,
+    "maxStepsPerFrame": 5
+  },
   "score": {
     "metersPerPlatform": 10,
     "pxPerMeter": 10
