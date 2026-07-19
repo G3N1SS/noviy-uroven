@@ -2,14 +2,13 @@ import { Application, Container, Text } from 'pixi.js'
 import { balance } from '../config/balance'
 import { createPlayer } from '../entities/player'
 import { Spawner } from '../systems/spawner'
-import { InputSystem } from '../systems/input'
+import { ControlsManager } from '../controls/controlsManager'
+import { createControlSwitch } from '../controls/controlSwitchUI'
 
 export interface GameHandle {
   app: Application
   destroy: () => void
 }
-
-const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
 /**
  * Этап 1 — ядро прыжка. Чистая математика (без Matter.js):
@@ -41,7 +40,21 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   world.addChild(player.view)
 
   const spawner = new Spawner(platformLayer)
-  const input = new InputSystem(app.canvas)
+  const controls = new ControlsManager(app.canvas)
+  const controlSwitch = createControlSwitch(controls)
+
+  // Клавиши ←/→ (A/D) — удобство для теста на десктопе, поверх выбранной схемы.
+  const keys = { left: false, right: false }
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true
+  }
+  const onKeyUp = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false
+  }
+  window.addEventListener('keydown', onKeyDown)
+  window.addEventListener('keyup', onKeyUp)
 
   const hud = new Text({
     text: '0 m',
@@ -69,6 +82,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     cameraOffset = h * balance.camera.followRatio
     minY = 0
     spawner.reset(balance.start.platformOffsetY, w)
+    controls.reset() // калибровка нуля наклона на старте партии
   }
 
   reset()
@@ -77,20 +91,13 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     const w = app.screen.width
     const h = app.screen.height
 
-    // 1) Ввод → горизонтальная скорость (следование за пальцем / клавиши)
-    let targetX: number | null = null
-    if (input.keyDir !== 0) targetX = player.x + input.keyDir * w
-    else if (input.pointerX !== null) targetX = input.pointerX
-
-    if (targetX !== null) {
-      player.vx = clamp(
-        (targetX - player.x) * balance.input.followFactor,
-        -maxHorizontalSpeed,
-        maxHorizontalSpeed,
-      )
-    } else {
-      player.vx *= horizontalDamping
-    }
+    // 1) Ввод → горизонтальная скорость. Приоритет: клавиши (dev) → активная схема.
+    //    null от контроллера = ввода нет → применяем инерцию/затухание.
+    const keyDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0)
+    let vx: number | null = keyDir !== 0 ? keyDir * maxHorizontalSpeed : null
+    if (vx === null) vx = controls.update(player.x, w, maxHorizontalSpeed)
+    if (vx === null) player.vx *= horizontalDamping
+    else player.vx = vx
 
     // 2) Интегрирование
     player.prevY = player.y
@@ -147,7 +154,8 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
         app,
         player,
         spawner,
-        input,
+        controls,
+        keys,
         state: () => ({
           x: Math.round(player.x),
           y: Math.round(player.y),
@@ -168,7 +176,10 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
 
   const destroy = () => {
     app.ticker.remove(tick)
-    input.destroy()
+    window.removeEventListener('keydown', onKeyDown)
+    window.removeEventListener('keyup', onKeyUp)
+    controls.destroy()
+    controlSwitch.destroy()
     app.destroy(true, { children: true })
   }
 
