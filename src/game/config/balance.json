@@ -20,8 +20,8 @@
     "widthBase": 90,
     "widthLate": 70,
     "height": 18,
-    "gapMin": 90,
-    "gapMax": 140,
+    "gapMin": 110,
+    "gapMax": 160,
     "maxJumpHeight": 180,
     "types": {
       "vols": {},
