@@ -141,6 +141,12 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
         if (crossedTop && withinX) {
           player.y = top - r
           player.vy = -jumpVel // автопрыжок
+          // Type-эффекты касания
+          if (p.type === 'rrl' && p.collapseTimer < 0) {
+            p.collapseTimer = balance.platforms.types.rrl.collapseMs / 1000 // старт разрушения
+          } else if (p.type === 'oneshot') {
+            p.triggered = true // исчезнет на ближайшем апдейте
+          }
           break
         }
       }
@@ -151,8 +157,8 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     if (targetOffset > cameraOffset) cameraOffset = targetOffset
     world.y = cameraOffset
 
-    // 6) Генерация/чистка
-    spawner.update(cameraOffset, w, h)
+    // 6) Генерация/чистка + динамика типов (движение/разрушение/удаление)
+    spawner.update(cameraOffset, w, h, dtSec)
 
     // 7) Счёт (высота в метрах)
     if (player.y < minY) minY = player.y

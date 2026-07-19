@@ -25,15 +25,19 @@
     "gapMin": 110,
     "gapMax": 160,
     "maxJumpHeight": 180,
+    "typeWeights": { "vols": 70, "rrl": 12, "moving": 12, "oneshot": 6 },
     "types": {
       "vols": {},
-      "rrl": { "collapseDelayMs": 300 },
-      "moving": { "speedMin": 1, "speedMax": 3 },
+      "rrl": { "collapseMs": 300 },
+      "moving": { "speedMinPerSec": 60, "speedMaxPerSec": 160 },
       "oneshot": {}
     }
   },
   "spawn": {
+    "guaranteedVolsEveryN": 3,
     "guaranteedVolsEvery": { "epoch1_2": 3, "epoch3_4": 4, "epoch5": 5 },
+    "hazardStartMeters": 80,
+    "hazardFullMeters": 500,
     "spawnAheadScreens": 2,
     "cullBelowScreens": 1
   },

@@ -1,63 +1,138 @@
 import { Container } from 'pixi.js'
 import { balance } from '../config/balance'
-import { createPlatform, drawPlatform, type Platform } from '../entities/platform'
+import { createPlatform, drawPlatform, type Platform, type PlatformType } from '../entities/platform'
 
 /**
- * Генерация платформ Этапа 1: простая (случайный X, зазор 60–140px по вертикали).
- * Спавн — на 2 экрана выше камеры, чистка — на экран ниже. Object pooling.
- * Паттерны + гарантированная ВОЛС + валидатор проходимости — Этап 2.
+ * Генерация платформ (Этап 2, инкремент 1): 4 типа с весами + гарантированная ВОЛС
+ * каждые N платформ (страховка от нечестной смерти). Спавн на 2 экрана выше камеры,
+ * чистка — на экран ниже. Object pooling. Per-step динамика: движущиеся ездят,
+ * РРЛ разрушается по таймеру, разовая исчезает после касания.
+ *
+ * Паттерны (5 базовых) + валидатор проходимости в Vitest + эпохальные веса — след. инкременты.
  */
 export class Spawner {
   readonly platforms: Platform[] = []
   private pool: Platform[] = []
   /** y самой верхней (последней сгенерированной) платформы. */
   private lastY = 0
+  /** сколько платформ прошло с последней ВОЛС (для гарантии). */
+  private sinceVols = 0
 
   constructor(private readonly world: Container) {}
 
-  /** Сброс партии: убрать все платформы, поставить стартовую под игроком. */
   reset(startPlatformY: number, screenW: number): void {
     for (const p of this.platforms) this.recycle(p)
     this.platforms.length = 0
     this.lastY = startPlatformY
-    this.spawnAt(screenW / 2, startPlatformY)
+    this.sinceVols = 0
+    this.spawnAt(screenW / 2, startPlatformY, 'vols') // старт всегда ВОЛС
   }
 
-  update(cameraOffset: number, screenW: number, screenH: number): void {
+  update(cameraOffset: number, screenW: number, screenH: number, dtSec: number): void {
+    // 1) Per-step динамика типов
+    for (const p of this.platforms) {
+      if (!p.active) continue
+      if (p.type === 'moving') {
+        p.x += p.vx * dtSec
+        const half = p.width / 2
+        if (p.x < half) {
+          p.x = half
+          p.vx = Math.abs(p.vx)
+        } else if (p.x > screenW - half) {
+          p.x = screenW - half
+          p.vx = -Math.abs(p.vx)
+        }
+        p.view.x = p.x
+      } else if (p.type === 'rrl' && p.collapseTimer >= 0) {
+        p.collapseTimer -= dtSec
+        const full = balance.platforms.types.rrl.collapseMs / 1000
+        p.view.alpha = Math.max(0.15, p.collapseTimer / full) // угасание
+        if (p.collapseTimer <= 0) {
+          p.active = false
+          p.view.visible = false
+        }
+      } else if (p.type === 'oneshot' && p.triggered) {
+        p.active = false
+        p.view.visible = false
+      }
+    }
+
+    // 2) Генерация вверх
     const topVisibleWorldY = -cameraOffset
     const spawnUntilY = topVisibleWorldY - balance.spawn.spawnAheadScreens * screenH
     const { gapMin, gapMax, widthBase } = balance.platforms
     const halfW = widthBase / 2
-
-    // Генерируем вверх, пока не заполнили запас над экраном
     while (this.lastY > spawnUntilY) {
       const gap = gapMin + Math.random() * (gapMax - gapMin)
       this.lastY -= gap
       const x = halfW + Math.random() * (screenW - 2 * halfW)
-      this.spawnAt(x, this.lastY)
+      this.spawnAt(x, this.lastY, this.pickType(this.difficultyAt(this.lastY)))
     }
 
-    // Чистим то, что ушло ниже экрана
+    // 3) Чистка: неактивные (разрушенные/использованные) и ушедшие ниже экрана
     const cullY = screenH + balance.spawn.cullBelowScreens * screenH
     for (let i = this.platforms.length - 1; i >= 0; i--) {
       const p = this.platforms[i]
-      if (p.y + cameraOffset > cullY) {
+      if (!p.active || p.y + cameraOffset > cullY) {
         this.recycle(p)
         this.platforms.splice(i, 1)
       }
     }
   }
 
-  private spawnAt(x: number, y: number): Platform {
+  /** Сложность 0..1 по высоте генерации: внизу 0 (только ВОЛС), к hazardFullMeters — 1. */
+  private difficultyAt(worldY: number): number {
+    const meters = -worldY / balance.score.pxPerMeter
+    const { hazardStartMeters, hazardFullMeters } = balance.spawn
+    const t = (meters - hazardStartMeters) / (hazardFullMeters - hazardStartMeters)
+    return Math.min(1, Math.max(0, t))
+  }
+
+  private pickType(difficulty: number): PlatformType {
+    // Гарантия: не более (N-1) не-ВОЛС подряд
+    if (this.sinceVols + 1 >= balance.spawn.guaranteedVolsEveryN) {
+      this.sinceVols = 0
+      return 'vols'
+    }
+    // Веса опасных типов растут с высотой; ВОЛС — константа (внизу доминирует полностью)
+    const w = balance.platforms.typeWeights
+    const vols = w.vols
+    const rrl = w.rrl * difficulty
+    const moving = w.moving * difficulty
+    const oneshot = w.oneshot * difficulty
+    const total = vols + rrl + moving + oneshot
+    let roll = Math.random() * total
+    let type: PlatformType
+    if ((roll -= vols) < 0) type = 'vols'
+    else if ((roll -= rrl) < 0) type = 'rrl'
+    else if ((roll -= moving) < 0) type = 'moving'
+    else type = 'oneshot'
+
+    if (type === 'vols') this.sinceVols = 0
+    else this.sinceVols++
+    return type
+  }
+
+  private spawnAt(x: number, y: number, type: PlatformType): Platform {
     const p = this.pool.pop() ?? createPlatform()
     if (!p.view.parent) this.world.addChild(p.view)
     p.x = x
     p.y = y
     p.width = balance.platforms.widthBase
+    p.type = type
     p.active = true
+    p.triggered = false
+    p.collapseTimer = -1
+    p.vx = 0
     p.view.visible = true
+    p.view.alpha = 1
     p.view.x = x
     p.view.y = y
+    if (type === 'moving') {
+      const m = balance.platforms.types.moving
+      const sp = m.speedMinPerSec + Math.random() * (m.speedMaxPerSec - m.speedMinPerSec)
+      p.vx = Math.random() < 0.5 ? -sp : sp
+    }
     drawPlatform(p)
     this.platforms.push(p)
     return p
@@ -66,6 +141,7 @@ export class Spawner {
   private recycle(p: Platform): void {
     p.active = false
     p.view.visible = false
+    p.view.alpha = 1
     this.pool.push(p)
   }
 }
