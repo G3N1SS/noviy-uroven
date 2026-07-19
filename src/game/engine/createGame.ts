@@ -32,10 +32,15 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   const world = new Container()
   app.stage.addChild(world)
 
+  // Слой платформ — ПОД игроком. Игрок добавляется в world после слоя,
+  // поэтому «сигнал» всегда рисуется поверх любых платформ (сколько бы их ни доспавнилось).
+  const platformLayer = new Container()
+  world.addChild(platformLayer)
+
   const player = createPlayer()
   world.addChild(player.view)
 
-  const spawner = new Spawner(world)
+  const spawner = new Spawner(platformLayer)
   const input = new InputSystem(app.canvas)
 
   const hud = new Text({
