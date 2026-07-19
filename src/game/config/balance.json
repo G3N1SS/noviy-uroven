@@ -46,7 +46,14 @@
     "safeWall": { "durationMs": 15000, "spawnEvery": 50 }
   },
   "score": {
-    "metersPerPlatform": 10
+    "metersPerPlatform": 10,
+    "pxPerMeter": 10
+  },
+  "input": {
+    "followFactor": 0.25
+  },
+  "start": {
+    "platformOffsetY": 120
   },
   "epochs": [
     { "id": 1, "name": "2G", "fromMeters": 0, "toMeters": 500 },
