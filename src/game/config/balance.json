@@ -25,7 +25,7 @@
     "gapMin": 110,
     "gapMax": 160,
     "maxJumpHeight": 180,
-    "typeWeights": { "vols": 70, "rrl": 15, "moving": 15 },
+    "typeWeights": { "vols": 70, "rrl": 15, "moving": 15, "fake": 12 },
     "types": {
       "vols": {},
       "rrl": { "collapseMs": 300 },
@@ -39,6 +39,16 @@
     "hazardFullMeters": 500,
     "spawnAheadScreens": 2,
     "cullBelowScreens": 1
+  },
+  "obstacles": {
+    "interference": {
+      "startMeters": 500,
+      "radius": 22,
+      "knockbackVy": 380,
+      "controlLockSec": 0.5,
+      "spawnEveryPx": 820
+    },
+    "fake": { "startMeters": 1500 }
   },
   "crystals": {
     "smallRadius": 9,

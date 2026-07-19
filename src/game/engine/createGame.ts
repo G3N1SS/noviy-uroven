@@ -3,6 +3,7 @@ import { balance } from '../config/balance'
 import { createPlayer } from '../entities/player'
 import { Spawner } from '../systems/spawner'
 import { CrystalManager } from '../systems/crystals'
+import { ObstacleManager } from '../systems/obstacles'
 import { EpochManager } from '../systems/epochs'
 import { drawCrystal } from '../entities/crystal'
 import { ControlsManager } from '../controls/controlsManager'
@@ -41,15 +42,18 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   const platformLayer = new Container()
   world.addChild(platformLayer)
 
-  // Кристаллы — над платформами, под игроком.
+  // Кристаллы и помехи — над платформами, под игроком.
   const crystalLayer = new Container()
   world.addChild(crystalLayer)
+  const obstacleLayer = new Container()
+  world.addChild(obstacleLayer)
 
   const player = createPlayer()
   world.addChild(player.view)
 
   const spawner = new Spawner(platformLayer)
   const crystals = new CrystalManager(crystalLayer)
+  const obstacles = new ObstacleManager(obstacleLayer)
   const controls = new ControlsManager(app.canvas)
   // Меню паузы (по ТЗ выбор управления живёт на паузе). reset() — hoisted-функция ниже.
   const pauseMenu = createPauseMenu({
@@ -115,6 +119,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   let cameraOffset = 0
   let minY = 0 // самая большая высота (наименьший y) за партию — для счёта
   let crystalTotal = 0 // кошелёк: НЕ обнуляется при смерти (кристаллы сохраняются)
+  let controlLockSec = 0 // потеря управления после помехи (сек)
 
   const { radius: r } = balance.player
   const { maxHorizontalSpeed, horizontalDampingPerSec } = balance.physics
@@ -139,7 +144,9 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     minY = 0
     spawner.reset(balance.start.platformOffsetY, w)
     crystals.reset(balance.start.platformOffsetY) // кошелёк crystalTotal НЕ трогаем
+    obstacles.reset(balance.start.platformOffsetY)
     epochs.reset() // фон вернётся к эпохе 1 на первом апдейте
+    controlLockSec = 0
     controls.reset() // калибровка нуля наклона на старте партии
   }
 
@@ -152,12 +159,17 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     const h = app.screen.height
 
     // 1) Ввод → горизонтальная скорость. Приоритет: клавиши (dev) → активная схема.
-    //    null от контроллера = ввода нет → применяем инерцию/затухание.
-    const keyDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0)
-    let vx: number | null = keyDir !== 0 ? keyDir * maxHorizontalSpeed : null
-    if (vx === null) vx = controls.update(player.x, w, maxHorizontalSpeed)
-    if (vx === null) player.vx *= dampingStep
-    else player.vx = vx
+    //    null от контроллера = ввода нет → инерция. При потере контроля (помеха) — только инерция.
+    if (controlLockSec > 0) {
+      controlLockSec -= dtSec
+      player.vx *= dampingStep
+    } else {
+      const keyDir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0)
+      let vx: number | null = keyDir !== 0 ? keyDir * maxHorizontalSpeed : null
+      if (vx === null) vx = controls.update(player.x, w, maxHorizontalSpeed)
+      if (vx === null) player.vx *= dampingStep
+      else player.vx = vx
+    }
 
     // 2) Интегрирование (semi-implicit Euler в реальном времени)
     player.prevY = player.y
@@ -174,19 +186,31 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       const prevBottom = player.prevY + r
       const currBottom = player.y + r
       for (const p of spawner.platforms) {
+        if (!p.active) continue
         const top = p.y
         const crossedTop = prevBottom <= top && currBottom >= top
         const withinX = Math.abs(player.x - p.x) <= p.width / 2 + r * 0.4
         if (crossedTop && withinX) {
+          if (p.type === 'fake') {
+            // фейк-платформа: растворяется без отскока — проваливаемся дальше
+            p.active = false
+            p.view.visible = false
+            continue
+          }
           player.y = top - r
           player.vy = -jumpVel // автопрыжок
-          // Type-эффект касания: РРЛ начинает разрушаться
           if (p.type === 'rrl' && p.collapseTimer < 0) {
-            p.collapseTimer = balance.platforms.types.rrl.collapseMs / 1000
+            p.collapseTimer = balance.platforms.types.rrl.collapseMs / 1000 // старт разрушения
           }
           break
         }
       }
+    }
+
+    // 4b) Помеха: касание = отброс вниз + потеря контроля (не убивает напрямую)
+    if (obstacles.hit(player.x, player.y, r)) {
+      player.vy = balance.obstacles.interference.knockbackVy
+      controlLockSec = balance.obstacles.interference.controlLockSec
     }
 
     // 5) Камера — только вверх
@@ -194,9 +218,10 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     if (targetOffset > cameraOffset) cameraOffset = targetOffset
     world.y = cameraOffset
 
-    // 6) Генерация/чистка платформ + кристаллов
+    // 6) Генерация/чистка платформ + кристаллов + помех
     spawner.update(cameraOffset, w, h, dtSec)
     crystals.update(cameraOffset, w, h)
+    obstacles.update(cameraOffset, w, h)
 
     // 7) Сбор кристаллов пролётом
     const got = crystals.collect(player.x, player.y, r)
@@ -269,6 +294,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     player,
     spawner,
     crystals,
+    obstacles,
     controls,
     keys,
     state: () => ({
@@ -283,6 +309,8 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       epoch: epochs.current,
       bgColor: app.renderer.background.color.toHex(),
       banner: banner.visible ? banner.text : null,
+      obstaclesOnField: obstacles.obstacles.length,
+      controlLocked: controlLockSec > 0,
     }),
     pause: () => app.ticker.stop(),
     resume: () => app.ticker.start(),

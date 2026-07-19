@@ -63,7 +63,8 @@ export class Spawner {
       const gap = gapMin + Math.random() * (gapMax - gapMin)
       this.lastY -= gap
       const x = halfW + Math.random() * (screenW - 2 * halfW)
-      this.spawnAt(x, this.lastY, this.pickType(this.difficultyAt(this.lastY)))
+      const meters = -this.lastY / balance.score.pxPerMeter
+      this.spawnAt(x, this.lastY, this.pickType(meters))
     }
 
     // 3) Чистка: неактивные (разрушенные/использованные) и ушедшие ниже экрана
@@ -77,31 +78,31 @@ export class Spawner {
     }
   }
 
-  /** Сложность 0..1 по высоте генерации: внизу 0 (только ВОЛС), к hazardFullMeters — 1. */
-  private difficultyAt(worldY: number): number {
-    const meters = -worldY / balance.score.pxPerMeter
-    const { hazardStartMeters, hazardFullMeters } = balance.spawn
-    const t = (meters - hazardStartMeters) / (hazardFullMeters - hazardStartMeters)
-    return Math.min(1, Math.max(0, t))
-  }
-
-  private pickType(difficulty: number): PlatformType {
-    // Гарантия: не более (N-1) не-ВОЛС подряд
+  private pickType(meters: number): PlatformType {
+    // Гарантия: не более (N-1) не-ВОЛС подряд (страховка от нечестной смерти)
     if (this.sinceVols + 1 >= balance.spawn.guaranteedVolsEveryN) {
       this.sinceVols = 0
       return 'vols'
     }
-    // Веса опасных типов растут с высотой; ВОЛС — константа (внизу доминирует полностью)
+    // Сложность 0..1 по высоте: внизу только ВОЛС, к hazardFullMeters — полные веса.
+    const { hazardStartMeters, hazardFullMeters } = balance.spawn
+    const difficulty = Math.min(
+      1,
+      Math.max(0, (meters - hazardStartMeters) / (hazardFullMeters - hazardStartMeters)),
+    )
     const w = balance.platforms.typeWeights
     const vols = w.vols
     const rrl = w.rrl * difficulty
     const moving = w.moving * difficulty
-    const total = vols + rrl + moving
+    // фейк — только с эпохи 3 (по высоте)
+    const fake = meters >= balance.obstacles.fake.startMeters ? w.fake * difficulty : 0
+    const total = vols + rrl + moving + fake
     let roll = Math.random() * total
     let type: PlatformType
     if ((roll -= vols) < 0) type = 'vols'
     else if ((roll -= rrl) < 0) type = 'rrl'
-    else type = 'moving'
+    else if ((roll -= moving) < 0) type = 'moving'
+    else type = 'fake'
 
     if (type === 'vols') this.sinceVols = 0
     else this.sinceVols++
