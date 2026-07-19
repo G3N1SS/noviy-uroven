@@ -62,9 +62,19 @@ export class Spawner {
     while (this.lastY > spawnUntilY) {
       const gap = gapMin + Math.random() * (gapMax - gapMin)
       this.lastY -= gap
-      const x = halfW + Math.random() * (screenW - 2 * halfW)
       const meters = -this.lastY / balance.score.pxPerMeter
-      this.spawnAt(x, this.lastY, this.pickType(meters))
+      const type = this.pickType(meters)
+      if (type === 'fake') {
+        // Фейк — ДЕКОЙ рядом с настоящей платформой на том же уровне. Так реальная опора
+        // есть всегда → фейк не создаёт недостижимых разрывов (честность), но ловушка живёт.
+        const [realX, fakeX] = this.decoyPositions(screenW)
+        this.spawnAt(realX, this.lastY, 'vols')
+        this.spawnAt(fakeX, this.lastY, 'fake')
+        this.sinceVols = 0 // настоящая ВОЛС на уровне поставлена
+      } else {
+        const x = halfW + Math.random() * (screenW - 2 * halfW)
+        this.spawnAt(x, this.lastY, type)
+      }
     }
 
     // 3) Чистка: неактивные (разрушенные/использованные) и ушедшие ниже экрана
@@ -76,6 +86,14 @@ export class Spawner {
         this.platforms.splice(i, 1)
       }
     }
+  }
+
+  /** Позиции пары «настоящая / фейк» в разных половинах экрана. Возвращает [realX, fakeX]. */
+  private decoyPositions(screenW: number): [number, number] {
+    const halfW = balance.platforms.widthBase / 2
+    const leftX = halfW + Math.random() * (screenW * 0.32 - halfW)
+    const rightX = screenW * 0.68 + Math.random() * (screenW - halfW - screenW * 0.68)
+    return Math.random() < 0.5 ? [leftX, rightX] : [rightX, leftX]
   }
 
   private pickType(meters: number): PlatformType {
