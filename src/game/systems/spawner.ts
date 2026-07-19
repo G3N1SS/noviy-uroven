@@ -51,7 +51,8 @@ export class Spawner {
           p.vx = -Math.abs(p.vx)
         }
         p.view.x = p.x
-        p.animT += p.vx * dtSec // марш ∝ пройденной дистанции (и направлению)
+        // марш ∝ дистанции/направлению, но замедлен коэффициентом (чтобы не рябило)
+        p.animT += p.vx * dtSec * balance.platforms.types.moving.chevronSpeedFactor
         drawMovingChevrons(p)
       } else if (p.type === 'rrl') {
         if (p.collapseTimer >= 0) {

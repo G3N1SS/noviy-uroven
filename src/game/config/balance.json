@@ -29,7 +29,7 @@
     "types": {
       "vols": {},
       "rrl": { "collapseMs": 300, "trembleAmp": 0.8 },
-      "moving": { "speedMinPerSec": 60, "speedMaxPerSec": 160, "chevronStepPx": 22 }
+      "moving": { "speedMinPerSec": 60, "speedMaxPerSec": 160, "chevronStepPx": 22, "chevronSpeedFactor": 0.4 }
     }
   },
   "spawn": {
