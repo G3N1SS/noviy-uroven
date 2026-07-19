@@ -1,7 +1,7 @@
 {
   "jump": {
     "heightPx": 205,
-    "riseSec": 0.43,
+    "riseSec": 0.37,
     "superHeightPx": 300
   },
   "physics": {
