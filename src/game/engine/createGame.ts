@@ -141,11 +141,9 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
         if (crossedTop && withinX) {
           player.y = top - r
           player.vy = -jumpVel // автопрыжок
-          // Type-эффекты касания
+          // Type-эффект касания: РРЛ начинает разрушаться
           if (p.type === 'rrl' && p.collapseTimer < 0) {
-            p.collapseTimer = balance.platforms.types.rrl.collapseMs / 1000 // старт разрушения
-          } else if (p.type === 'oneshot') {
-            p.triggered = true // исчезнет на ближайшем апдейте
+            p.collapseTimer = balance.platforms.types.rrl.collapseMs / 1000
           }
           break
         }

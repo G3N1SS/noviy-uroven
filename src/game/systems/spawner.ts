@@ -51,9 +51,6 @@ export class Spawner {
           p.active = false
           p.view.visible = false
         }
-      } else if (p.type === 'oneshot' && p.triggered) {
-        p.active = false
-        p.view.visible = false
       }
     }
 
@@ -99,14 +96,12 @@ export class Spawner {
     const vols = w.vols
     const rrl = w.rrl * difficulty
     const moving = w.moving * difficulty
-    const oneshot = w.oneshot * difficulty
-    const total = vols + rrl + moving + oneshot
+    const total = vols + rrl + moving
     let roll = Math.random() * total
     let type: PlatformType
     if ((roll -= vols) < 0) type = 'vols'
     else if ((roll -= rrl) < 0) type = 'rrl'
-    else if ((roll -= moving) < 0) type = 'moving'
-    else type = 'oneshot'
+    else type = 'moving'
 
     if (type === 'vols') this.sinceVols = 0
     else this.sinceVols++
@@ -121,7 +116,6 @@ export class Spawner {
     p.width = balance.platforms.widthBase
     p.type = type
     p.active = true
-    p.triggered = false
     p.collapseTimer = -1
     p.vx = 0
     p.view.visible = true

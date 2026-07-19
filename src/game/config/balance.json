@@ -25,12 +25,11 @@
     "gapMin": 110,
     "gapMax": 160,
     "maxJumpHeight": 180,
-    "typeWeights": { "vols": 70, "rrl": 12, "moving": 12, "oneshot": 6 },
+    "typeWeights": { "vols": 70, "rrl": 15, "moving": 15 },
     "types": {
       "vols": {},
       "rrl": { "collapseMs": 300 },
-      "moving": { "speedMinPerSec": 60, "speedMaxPerSec": 160 },
-      "oneshot": {}
+      "moving": { "speedMinPerSec": 60, "speedMaxPerSec": 160 }
     }
   },
   "spawn": {
