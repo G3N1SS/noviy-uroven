@@ -1,5 +1,6 @@
 import { Container } from 'pixi.js'
 import { balance } from '../config/balance'
+import { PlatformPlanner } from './generation'
 import {
   createPlatform,
   drawPlatform,
@@ -22,18 +23,15 @@ import {
 export class Spawner {
   readonly platforms: Platform[] = []
   private pool: Platform[] = []
-  /** y самой верхней (последней сгенерированной) платформы. */
-  private lastY = 0
-  /** сколько платформ прошло с последней ВОЛС (для гарантии). */
-  private sinceVols = 0
+  /** Чистый планировщик решений (что/где спавнить). Спавнер только рисует и анимирует. */
+  private readonly planner = new PlatformPlanner()
 
   constructor(private readonly world: Container) {}
 
   reset(startPlatformY: number, screenW: number): void {
     for (const p of this.platforms) this.recycle(p)
     this.platforms.length = 0
-    this.lastY = startPlatformY
-    this.sinceVols = 0
+    this.planner.reset(startPlatformY)
     this.spawnAt(screenW / 2, startPlatformY, 'vols') // старт всегда ВОЛС
   }
 
@@ -105,27 +103,11 @@ export class Spawner {
       }
     }
 
-    // 2) Генерация вверх
+    // 2) Генерация вверх — решения принимает планировщик, спавнер их отрисовывает
     const topVisibleWorldY = -cameraOffset
     const spawnUntilY = topVisibleWorldY - balance.spawn.spawnAheadScreens * screenH
-    const { gapMin, gapMax, widthBase } = balance.platforms
-    const halfW = widthBase / 2
-    while (this.lastY > spawnUntilY) {
-      const gap = gapMin + Math.random() * (gapMax - gapMin)
-      this.lastY -= gap
-      const meters = -this.lastY / balance.score.pxPerMeter
-      const type = this.pickType(meters)
-      if (type === 'fake') {
-        // Фейк — ДЕКОЙ рядом с настоящей платформой на том же уровне. Так реальная опора
-        // есть всегда → фейк не создаёт недостижимых разрывов (честность), но ловушка живёт.
-        const [realX, fakeX] = this.decoyPositions(screenW)
-        this.spawnAt(realX, this.lastY, 'vols')
-        this.spawnAt(fakeX, this.lastY, 'fake')
-        this.sinceVols = 0 // настоящая ВОЛС на уровне поставлена
-      } else {
-        const x = halfW + Math.random() * (screenW - 2 * halfW)
-        this.spawnAt(x, this.lastY, type)
-      }
+    for (const pl of this.planner.plan(spawnUntilY, screenW)) {
+      this.spawnAt(pl.x, pl.y, pl.type)
     }
 
     // 3) Чистка: неактивные (разрушенные/использованные) и ушедшие ниже экрана
@@ -137,45 +119,6 @@ export class Spawner {
         this.platforms.splice(i, 1)
       }
     }
-  }
-
-  /** Позиции пары «настоящая / фейк» в разных половинах экрана. Возвращает [realX, fakeX]. */
-  private decoyPositions(screenW: number): [number, number] {
-    const halfW = balance.platforms.widthBase / 2
-    const leftX = halfW + Math.random() * (screenW * 0.32 - halfW)
-    const rightX = screenW * 0.68 + Math.random() * (screenW - halfW - screenW * 0.68)
-    return Math.random() < 0.5 ? [leftX, rightX] : [rightX, leftX]
-  }
-
-  private pickType(meters: number): PlatformType {
-    // Гарантия: не более (N-1) не-ВОЛС подряд (страховка от нечестной смерти)
-    if (this.sinceVols + 1 >= balance.spawn.guaranteedVolsEveryN) {
-      this.sinceVols = 0
-      return 'vols'
-    }
-    // Сложность 0..1 по высоте: внизу только ВОЛС, к hazardFullMeters — полные веса.
-    const { hazardStartMeters, hazardFullMeters } = balance.spawn
-    const difficulty = Math.min(
-      1,
-      Math.max(0, (meters - hazardStartMeters) / (hazardFullMeters - hazardStartMeters)),
-    )
-    const w = balance.platforms.typeWeights
-    const vols = w.vols
-    const rrl = w.rrl * difficulty
-    const moving = w.moving * difficulty
-    // фейк — только с эпохи 3 (по высоте)
-    const fake = meters >= balance.obstacles.fake.startMeters ? w.fake * difficulty : 0
-    const total = vols + rrl + moving + fake
-    let roll = Math.random() * total
-    let type: PlatformType
-    if ((roll -= vols) < 0) type = 'vols'
-    else if ((roll -= rrl) < 0) type = 'rrl'
-    else if ((roll -= moving) < 0) type = 'moving'
-    else type = 'fake'
-
-    if (type === 'vols') this.sinceVols = 0
-    else this.sinceVols++
-    return type
   }
 
   private spawnAt(x: number, y: number, type: PlatformType): Platform {
