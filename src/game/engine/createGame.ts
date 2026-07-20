@@ -53,12 +53,24 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   world.addChild(boosterLayer)
 
   const player = createPlayer()
-  // Аура Гигабэка — мягкая заливка-свечение цветом бустера
+  // Ауры бустеров — независимые слои, могут гореть одновременно (стакуются):
+  // Гигабэк — мягкая маджента-заливка (внутренний слой)
   const aura = new Graphics()
   aura.circle(0, 0, balance.player.radius * 2.1).fill({ color: 0xffffff })
+  aura.tint = boosterColor('gigaback')
   aura.visible = false
   player.view.addChildAt(aura, 0)
-  // Аура щита — вращающийся гекс-«пузырь» (силовое поле), контур
+  // SafeWall — электрик-блю кольцо снаружи заливки Гигабэка
+  const safewallAura = new Graphics()
+  safewallAura
+    .circle(0, 0, balance.player.radius * 2.45)
+    .stroke({ color: 0xffffff, width: 2 })
+    .circle(0, 0, balance.player.radius * 2.45)
+    .fill({ color: 0xffffff, alpha: 0.06 })
+  safewallAura.tint = boosterColor('safewall')
+  safewallAura.visible = false
+  player.view.addChildAt(safewallAura, 1)
+  // Щит — вращающийся белый гекс-«пузырь» (силовое поле), контур
   const shieldAura = new Graphics()
   {
     const R = balance.player.radius * 1.7
@@ -70,7 +82,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     shieldAura.poly(hex).fill({ color: 0xffffff, alpha: 0.05 }).stroke({ color: 0xffffff, width: 2 })
   }
   shieldAura.visible = false
-  player.view.addChildAt(shieldAura, 1)
+  player.view.addChildAt(shieldAura, 2)
   world.addChild(player.view)
 
   const spawner = new Spawner(platformLayer)
@@ -299,26 +311,17 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     banner.x = w / 2
     banner.y = h * 0.26
 
-    // 9b) Аура героя: Гигабэк → SafeWall (заливки) → щит (гекс-пузырь)
-    if (gigabackSec > 0) {
-      aura.visible = true
-      aura.tint = boosterColor('gigaback')
-      aura.alpha = 0.14 + 0.07 * Math.sin(gigabackSec * 6)
-      shieldAura.visible = false
-    } else if (safewallSec > 0) {
-      aura.visible = true
-      aura.tint = boosterColor('safewall')
-      aura.alpha = 0.14 + 0.07 * Math.sin(safewallSec * 6)
-      shieldAura.visible = false
-    } else if (rescueCharges > 0) {
-      aura.visible = false
-      shieldAura.visible = true
+    // 9b) Ауры героя — независимые, стакуются: Гигабэк (маджента-заливка) +
+    // SafeWall (электрик-блю кольцо) + щит (белый гекс-пузырь)
+    aura.visible = gigabackSec > 0
+    if (aura.visible) aura.alpha = 0.14 + 0.07 * Math.sin(gigabackSec * 6)
+    safewallAura.visible = safewallSec > 0
+    if (safewallAura.visible) safewallAura.alpha = 0.55 + 0.25 * Math.sin(safewallSec * 6)
+    shieldAura.visible = rescueCharges > 0
+    if (shieldAura.visible) {
       shieldT += dtSec
       shieldAura.rotation = shieldT * 0.7 // медленное вращение
       shieldAura.alpha = 0.7 + 0.3 * Math.sin(shieldT * 3.5) // мягкий пульс
-    } else {
-      aura.visible = false
-      shieldAura.visible = false
     }
 
     // 9c) HUD справа-внизу: кольцевые таймеры активных timed-бустеров (стопкой) + заряды щита
