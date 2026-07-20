@@ -25,6 +25,7 @@
     "gapMin": 110,
     "gapMax": 160,
     "maxJumpHeight": 180,
+    "bounce": { "ampPx": 11, "freqHz": 3, "decay": 6, "durationSec": 0.6 },
     "typeWeights": { "vols": 70, "rrl": 15, "moving": 15, "fake": 12 },
     "types": {
       "vols": {},

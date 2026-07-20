@@ -6,6 +6,7 @@ import {
   drawFakeHologram,
   drawRrlShatter,
   drawMovingChevrons,
+  bounceOffset,
   type Platform,
   type PlatformType,
 } from '../entities/platform'
@@ -84,6 +85,17 @@ export class Spawner {
         // голограмма: переливание цельная ↔ двоящийся контур
         p.animT += dtSec
         drawFakeHologram(p)
+      }
+
+      // Landing-bounce (ВОЛС/движущаяся): проседание view.y при касании, коллизия не трогается
+      if (p.bounceT >= 0) {
+        p.bounceT += dtSec
+        if (p.bounceT >= balance.platforms.bounce.durationSec) {
+          p.bounceT = -1
+          p.view.y = p.y
+        } else {
+          p.view.y = p.y + bounceOffset(p.bounceT)
+        }
       }
     }
 
@@ -170,6 +182,7 @@ export class Spawner {
     p.active = true
     p.collapseTimer = -1
     p.vx = 0
+    p.bounceT = -1
     p.animT = Math.random() * balance.obstacles.fake.shimmerSec // десинхрон голограмм
     p.view.visible = true
     p.view.alpha = 1

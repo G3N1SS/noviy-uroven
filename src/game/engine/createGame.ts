@@ -202,6 +202,8 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
           player.vy = -jumpVel // автопрыжок
           if (p.type === 'rrl' && p.collapseTimer < 0) {
             p.collapseTimer = balance.platforms.types.rrl.collapseMs / 1000 // старт разрушения
+          } else if (p.type === 'vols' || p.type === 'moving') {
+            p.bounceT = 0 // landing-bounce (пружина проседания)
           }
           break
         }

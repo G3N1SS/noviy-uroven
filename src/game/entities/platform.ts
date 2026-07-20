@@ -28,6 +28,8 @@ export interface Platform {
   animT: number
   /** moving: плавное «визуальное направление» −1..1 (для мягкого разворота стрелок) */
   dirVisual: number
+  /** landing-bounce: сек с момента касания; <0 — не пружинит (ВОЛС/движущаяся) */
+  bounceT: number
   /** маска-скругление для клипа марширующих шевронов (moving). */
   maskG: Graphics
 }
@@ -48,8 +50,18 @@ export function createPlatform(): Platform {
     collapseTimer: -1,
     animT: 0,
     dirVisual: 1,
+    bounceT: -1,
     maskG,
   }
+}
+
+/**
+ * Смещение платформы вниз при приземлении героя (landing-bounce, вариант C):
+ * затухающая синусоида — вниз, перелёт вверх, затухание. Только косметика view.y.
+ */
+export function bounceOffset(t: number): number {
+  const b = balance.platforms.bounce
+  return b.ampPx * Math.exp(-b.decay * t) * Math.sin(2 * Math.PI * b.freqHz * t)
 }
 
 export function drawPlatform(p: Platform): void {
