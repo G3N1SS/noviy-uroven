@@ -135,6 +135,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   let crystalTotal = 0 // кошелёк: НЕ обнуляется при смерти (кристаллы сохраняются)
   let controlLockSec = 0 // потеря управления после помехи (сек)
   let gigabackSec = 0 // остаток действия Гигабэка (×2 кристаллы), сек
+  let rescueCharges = 0 // заряды спасения (MiXX-щит / Вечные минуты) — батут от нижнего края
 
   const { radius: r } = balance.player
   const { maxHorizontalSpeed, horizontalDampingPerSec } = balance.physics
@@ -164,6 +165,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     epochs.reset() // фон вернётся к эпохе 1 на первом апдейте
     controlLockSec = 0
     gigabackSec = 0
+    rescueCharges = 0
     controls.reset() // калибровка нуля наклона на старте партии
   }
 
@@ -246,7 +248,11 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
 
     // 6b) Сбор бустеров пролётом
     for (const type of boosters.collect(player.x, player.y, r)) {
-      if (type === 'gigaback') gigabackSec = balance.boosters.gigaback.durationMs / 1000
+      if (type === 'gigaback') {
+        gigabackSec = balance.boosters.gigaback.durationMs / 1000
+      } else if (type === 'mixxShield' || type === 'eternal') {
+        rescueCharges = Math.min(balance.boosters.rescueMax, rescueCharges + 1)
+      }
     }
     // тики таймеров бустеров
     if (gigabackSec > 0) gigabackSec = Math.max(0, gigabackSec - dtSec)
@@ -274,11 +280,15 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     banner.x = w / 2
     banner.y = h * 0.26
 
-    // 9b) Аура героя цветом активного бустера (сейчас — Гигабэк)
+    // 9b) Аура героя: Гигабэк (маджента) приоритетнее; иначе — щит-заряды (белая)
     if (gigabackSec > 0) {
       aura.visible = true
       aura.tint = boosterColor('gigaback')
       aura.alpha = 0.14 + 0.07 * Math.sin(gigabackSec * 6)
+    } else if (rescueCharges > 0) {
+      aura.visible = true
+      aura.tint = 0xffffff
+      aura.alpha = 0.1
     } else {
       aura.visible = false
     }
@@ -310,9 +320,29 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       boosterHud.arc(cx, cy, rad, a0, a1)
       boosterHud.stroke({ color: col, width: 3.5, cap: 'round' })
     }
+    // заряды спасения (щит/вечные) — маленькие гексагоны над таймером
+    for (let i = 0; i < rescueCharges; i++) {
+      const ix = w - 38
+      const iy = h - 78 - i * 26
+      const hex: number[] = []
+      for (let k = 0; k < 6; k++) {
+        const a = (Math.PI / 3) * k - Math.PI / 2
+        hex.push(ix + Math.cos(a) * 9, iy + Math.sin(a) * 9)
+      }
+      boosterHud.poly(hex).fill({ color: 0x1a1a1a }).stroke({ color: 0xffffff, width: 2 })
+    }
 
-    // 10) Смерть: ушёл за нижний край → рестарт (камера вниз не едет)
-    if (player.y + cameraOffset > h + r) reset()
+    // 10) Нижний край: спасение батутом (заряд щита/вечных) → иначе смерть/рестарт
+    if (player.y + cameraOffset > h + r) {
+      if (rescueCharges > 0) {
+        rescueCharges--
+        player.y = h - r - cameraOffset // возвращаем на нижний край
+        player.vy = -jumpVel * balance.boosters.rescueBounceFactor // мощный отскок вверх
+        controlLockSec = 0
+      } else {
+        reset()
+      }
+    }
 
     // 11) Синхронизация вью
     player.view.x = player.x
@@ -380,6 +410,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       controlLocked: controlLockSec > 0,
       boostersOnField: boosters.boosters.length,
       gigabackSec: Math.round(gigabackSec * 100) / 100,
+      rescueCharges,
     }),
     pause: () => app.ticker.stop(),
     resume: () => app.ticker.start(),
