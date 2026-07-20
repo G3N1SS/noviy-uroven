@@ -46,7 +46,8 @@
       "radius": 22,
       "knockbackVy": 380,
       "controlLockSec": 0.5,
-      "spawnEveryPx": 820
+      "spawnEveryPx": 820,
+      "glitchCycleSec": 1.4
     },
     "fake": { "startMeters": 1500, "shimmerSec": 2.8 }
   },

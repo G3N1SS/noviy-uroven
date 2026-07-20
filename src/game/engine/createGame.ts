@@ -222,7 +222,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     // 6) Генерация/чистка платформ + кристаллов + помех
     spawner.update(cameraOffset, w, h, dtSec)
     crystals.update(cameraOffset, w, h)
-    obstacles.update(cameraOffset, w, h)
+    obstacles.update(cameraOffset, w, h, dtSec)
 
     // 7) Сбор кристаллов пролётом
     const got = crystals.collect(player.x, player.y, r)

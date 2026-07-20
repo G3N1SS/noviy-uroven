@@ -20,7 +20,14 @@ export class ObstacleManager {
     this.nextY = startY - balance.obstacles.interference.spawnEveryPx
   }
 
-  update(cameraOffset: number, screenW: number, screenH: number): void {
+  update(cameraOffset: number, screenW: number, screenH: number, dtSec: number): void {
+    // per-frame анимация глитча
+    for (const o of this.obstacles) {
+      if (!o.active) continue
+      o.animT += dtSec
+      drawObstacle(o)
+    }
+
     const spawnUntilY = -cameraOffset - balance.spawn.spawnAheadScreens * screenH
     const { spawnEveryPx, startMeters, radius } = balance.obstacles.interference
 
@@ -67,6 +74,7 @@ export class ObstacleManager {
     o.y = y
     o.radius = balance.obstacles.interference.radius
     o.active = true
+    o.animT = Math.random() * balance.obstacles.interference.glitchCycleSec // десинхрон
     o.view.visible = true
     o.view.x = x
     o.view.y = y
