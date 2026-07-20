@@ -62,7 +62,7 @@
   "boosters": {
     "radius": 16,
     "floatAmp": 4,
-    "gigaback": { "durationMs": 10000, "spawnEvery": 40, "color": "#FF3495" },
+    "gigaback": { "durationMs": 10000, "spawnEvery": 40, "color": "#FF3495", "pulseSec": 1.4 },
     "mixxShield": { "spawnEvery": 60, "color": "#C4F500" },
     "eternalMinutes": { "spawnEvery": 80, "color": "#FFFFFF" },
     "safeWall": { "durationMs": 15000, "spawnEvery": 50, "color": "#1F3FFF" }

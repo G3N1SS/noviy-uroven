@@ -46,13 +46,18 @@ export class BoosterManager {
       }
     }
 
-    // анимация парения (иконка нарисована один раз)
+    // анимация: парение (bob) + пульс. Гигабэк — перерисовка per-frame (пульс двух ромбов).
     for (const b of this.boosters) {
       if (!b.active) continue
       b.animT += dtSec
       b.view.y = b.y + Math.sin(b.animT * 2.2) * balance.boosters.floatAmp
-      b.view.rotation = b.type === 'gigaback' ? b.animT * 1.6 : 0
-      b.view.scale.set(1 + Math.sin(b.animT * 3) * 0.06)
+      if (b.type === 'gigaback') {
+        b.view.rotation = 0
+        b.view.scale.set(1)
+        drawBooster(b)
+      } else {
+        b.view.scale.set(1 + Math.sin(b.animT * 3) * 0.06)
+      }
     }
 
     const cullY = screenH + balance.spawn.cullBelowScreens * screenH

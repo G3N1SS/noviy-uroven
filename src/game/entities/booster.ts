@@ -48,13 +48,35 @@ export function drawBooster(b: Booster): void {
 
   switch (b.type) {
     case 'gigaback': {
-      // кольцевая стрелка (возврат трафика)
-      g.circle(0, 0, r * 0.72).stroke({ color: c, width: 3 })
-      const rr = r * 0.72
-      g.moveTo(rr - 4, -r * 0.72 + 2)
-        .lineTo(rr + 3, -r * 0.55)
-        .lineTo(rr - 5, -r * 0.5)
-      g.stroke({ color: c, width: 3, cap: 'round', join: 'round' })
+      // двойной кристалл (×2): два ромба пульсируют попеременно
+      const cycle = balance.boosters.gigaback.pulseSec
+      const tt = (b.animT % cycle) / cycle
+      const pulse = (a: number, bb: number) =>
+        tt >= a && tt <= bb ? Math.sin(((tt - a) / (bb - a)) * Math.PI) : 0
+      const dv = r * 0.6
+      const dh = r * 0.44
+      const off = r * 0.42
+      const s1 = 1 + 0.2 * pulse(0, 0.3)
+      const s2 = 1 + 0.2 * pulse(0.35, 0.65)
+      const a2 = 0.45 + 0.55 * pulse(0.35, 0.65)
+      // ромб 1 — заполненный + белое ядро
+      g.poly([-off, -dv * s1, -off + dh * s1, 0, -off, dv * s1, -off - dh * s1, 0]).fill({ color: c })
+      g.poly([
+        -off,
+        -dv * 0.55 * s1,
+        -off + dh * 0.55 * s1,
+        0,
+        -off,
+        dv * 0.55 * s1,
+        -off - dh * 0.55 * s1,
+        0,
+      ]).fill({ color: 0xffffff, alpha: 0.9 })
+      // ромб 2 — контурный
+      g.poly([off, -dv * s2, off + dh * s2, 0, off, dv * s2, off - dh * s2, 0]).stroke({
+        color: c,
+        width: 2.5,
+        alpha: a2,
+      })
       break
     }
     case 'mixxShield': {
