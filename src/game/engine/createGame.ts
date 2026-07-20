@@ -53,11 +53,24 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   world.addChild(boosterLayer)
 
   const player = createPlayer()
-  // Аура вокруг «сигнала» (цвет активного бустера) — за телом персонажа
+  // Аура Гигабэка — мягкая заливка-свечение цветом бустера
   const aura = new Graphics()
   aura.circle(0, 0, balance.player.radius * 2.1).fill({ color: 0xffffff })
   aura.visible = false
   player.view.addChildAt(aura, 0)
+  // Аура щита — вращающийся гекс-«пузырь» (силовое поле), контур
+  const shieldAura = new Graphics()
+  {
+    const R = balance.player.radius * 1.7
+    const hex: number[] = []
+    for (let k = 0; k < 6; k++) {
+      const a = (Math.PI / 3) * k - Math.PI / 2
+      hex.push(Math.cos(a) * R, Math.sin(a) * R)
+    }
+    shieldAura.poly(hex).fill({ color: 0xffffff, alpha: 0.05 }).stroke({ color: 0xffffff, width: 2 })
+  }
+  shieldAura.visible = false
+  player.view.addChildAt(shieldAura, 1)
   world.addChild(player.view)
 
   const spawner = new Spawner(platformLayer)
@@ -136,6 +149,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   let controlLockSec = 0 // потеря управления после помехи (сек)
   let gigabackSec = 0 // остаток действия Гигабэка (×2 кристаллы), сек
   let rescueCharges = 0 // заряды спасения (MiXX-щит / Вечные минуты) — батут от нижнего края
+  let shieldT = 0 // фаза анимации ауры щита
 
   const { radius: r } = balance.player
   const { maxHorizontalSpeed, horizontalDampingPerSec } = balance.physics
@@ -280,17 +294,21 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     banner.x = w / 2
     banner.y = h * 0.26
 
-    // 9b) Аура героя: Гигабэк (маджента) приоритетнее; иначе — щит-заряды (белая)
+    // 9b) Аура героя: Гигабэк (заливка-свечение) приоритетнее; иначе — щит (гекс-пузырь)
     if (gigabackSec > 0) {
       aura.visible = true
       aura.tint = boosterColor('gigaback')
       aura.alpha = 0.14 + 0.07 * Math.sin(gigabackSec * 6)
+      shieldAura.visible = false
     } else if (rescueCharges > 0) {
-      aura.visible = true
-      aura.tint = 0xffffff
-      aura.alpha = 0.1
+      aura.visible = false
+      shieldAura.visible = true
+      shieldT += dtSec
+      shieldAura.rotation = shieldT * 0.7 // медленное вращение
+      shieldAura.alpha = 0.7 + 0.3 * Math.sin(shieldT * 3.5) // мягкий пульс
     } else {
       aura.visible = false
+      shieldAura.visible = false
     }
 
     // 9c) HUD бустера справа-внизу: иконка в тёмном круге + тающая кольцевая дуга (вариант B)
