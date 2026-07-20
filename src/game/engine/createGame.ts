@@ -150,6 +150,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   let gigabackSec = 0 // остаток действия Гигабэка (×2 кристаллы), сек
   let rescueCharges = 0 // заряды спасения (MiXX-щит / Вечные минуты) — батут от нижнего края
   let shieldT = 0 // фаза анимации ауры щита
+  let safewallSec = 0 // SafeWall: иммунитет к помехам + подсветка фейков, сек
 
   const { radius: r } = balance.player
   const { maxHorizontalSpeed, horizontalDampingPerSec } = balance.physics
@@ -180,6 +181,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     controlLockSec = 0
     gigabackSec = 0
     rescueCharges = 0
+    safewallSec = 0
     controls.reset() // калибровка нуля наклона на старте партии
   }
 
@@ -243,8 +245,8 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       }
     }
 
-    // 4b) Помеха: касание = отброс вниз + потеря контроля (не убивает напрямую)
-    if (obstacles.hit(player.x, player.y, r)) {
+    // 4b) Помеха: касание = отброс вниз + потеря контроля. SafeWall = иммунитет (проходим сквозь)
+    if (safewallSec === 0 && obstacles.hit(player.x, player.y, r)) {
       player.vy = balance.obstacles.interference.knockbackVy
       controlLockSec = balance.obstacles.interference.controlLockSec
     }
@@ -255,7 +257,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     world.y = cameraOffset
 
     // 6) Генерация/чистка платформ + кристаллов + помех + бустеров
-    spawner.update(cameraOffset, w, h, dtSec)
+    spawner.update(cameraOffset, w, h, dtSec, safewallSec > 0) // подсветка фейков при SafeWall
     crystals.update(cameraOffset, w, h)
     obstacles.update(cameraOffset, w, h, dtSec)
     boosters.update(cameraOffset, w, h, dtSec)
@@ -266,10 +268,13 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
         gigabackSec = balance.boosters.gigaback.durationMs / 1000
       } else if (type === 'mixxShield' || type === 'eternal') {
         rescueCharges = Math.min(balance.boosters.rescueMax, rescueCharges + 1)
+      } else if (type === 'safewall') {
+        safewallSec = balance.boosters.safeWall.durationMs / 1000
       }
     }
     // тики таймеров бустеров
     if (gigabackSec > 0) gigabackSec = Math.max(0, gigabackSec - dtSec)
+    if (safewallSec > 0) safewallSec = Math.max(0, safewallSec - dtSec)
 
     // 7) Сбор кристаллов пролётом (Гигабэк ×2)
     const got = crystals.collect(player.x, player.y, r)
@@ -294,11 +299,16 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     banner.x = w / 2
     banner.y = h * 0.26
 
-    // 9b) Аура героя: Гигабэк (заливка-свечение) приоритетнее; иначе — щит (гекс-пузырь)
+    // 9b) Аура героя: Гигабэк → SafeWall (заливки) → щит (гекс-пузырь)
     if (gigabackSec > 0) {
       aura.visible = true
       aura.tint = boosterColor('gigaback')
       aura.alpha = 0.14 + 0.07 * Math.sin(gigabackSec * 6)
+      shieldAura.visible = false
+    } else if (safewallSec > 0) {
+      aura.visible = true
+      aura.tint = boosterColor('safewall')
+      aura.alpha = 0.14 + 0.07 * Math.sin(safewallSec * 6)
       shieldAura.visible = false
     } else if (rescueCharges > 0) {
       aura.visible = false
@@ -311,37 +321,47 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       shieldAura.visible = false
     }
 
-    // 9c) HUD бустера справа-внизу: иконка в тёмном круге + тающая кольцевая дуга (вариант B)
+    // 9c) HUD справа-внизу: кольцевые таймеры активных timed-бустеров (стопкой) + заряды щита
     boosterHud.clear()
-    if (gigabackSec > 0) {
+    const gigaDur = balance.boosters.gigaback.durationMs / 1000
+    const swDur = balance.boosters.safeWall.durationMs / 1000
+    const timers: Array<{ frac: number; type: 'gigaback' | 'safewall' }> = []
+    if (gigabackSec > 0) timers.push({ frac: gigabackSec / gigaDur, type: 'gigaback' })
+    if (safewallSec > 0) timers.push({ frac: safewallSec / swDur, type: 'safewall' })
+
+    for (let s = 0; s < timers.length; s++) {
+      const { frac, type } = timers[s]
       const cx = w - 38
-      const cy = h - 38
+      const cy = h - 38 - s * 52
       const rad = 20
-      const col = boosterColor('gigaback')
-      // тёмный диск-подложка
+      const col = boosterColor(type)
       boosterHud.circle(cx, cy, rad).fill({ color: 0x1a1a1a })
-      // мини-иконка: два ромба (статично)
-      const dv = 7
-      const dh = 5
-      const off = 6
-      boosterHud
-        .poly([cx - off, cy - dv, cx - off + dh, cy, cx - off, cy + dv, cx - off - dh, cy])
-        .fill({ color: col })
-      boosterHud
-        .poly([cx + off, cy - dv, cx + off + dh, cy, cx + off, cy + dv, cx + off - dh, cy])
-        .stroke({ color: col, width: 1.5 })
-      // тающая дуга таймера — ОТДЕЛЬНЫЙ подпуть (moveTo рвёт линию от предыдущей заливки)
-      const frac = gigabackSec / (balance.boosters.gigaback.durationMs / 1000)
+      if (type === 'gigaback') {
+        const dv = 7
+        const dh = 5
+        const off = 6
+        boosterHud
+          .poly([cx - off, cy - dv, cx - off + dh, cy, cx - off, cy + dv, cx - off - dh, cy])
+          .fill({ color: col })
+        boosterHud
+          .poly([cx + off, cy - dv, cx + off + dh, cy, cx + off, cy + dv, cx + off - dh, cy])
+          .stroke({ color: col, width: 1.5 })
+      } else {
+        // мини-щит
+        boosterHud
+          .poly([cx, cy - 9, cx + 8, cy - 4, cx + 8, cy + 3, cx, cy + 9, cx - 8, cy + 3, cx - 8, cy - 4])
+          .stroke({ color: col, width: 2 })
+      }
       const a0 = -Math.PI / 2
       const a1 = a0 + frac * Math.PI * 2
       boosterHud.moveTo(cx + rad * Math.cos(a0), cy + rad * Math.sin(a0))
       boosterHud.arc(cx, cy, rad, a0, a1)
       boosterHud.stroke({ color: col, width: 3.5, cap: 'round' })
     }
-    // заряды спасения (щит/вечные) — маленькие гексагоны над таймером
+    // заряды спасения (щит/вечные) — гексагоны над кольцами
     for (let i = 0; i < rescueCharges; i++) {
       const ix = w - 38
-      const iy = h - 78 - i * 26
+      const iy = h - 38 - timers.length * 52 - 14 - i * 26
       const hex: number[] = []
       for (let k = 0; k < 6; k++) {
         const a = (Math.PI / 3) * k - Math.PI / 2
@@ -429,6 +449,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       boostersOnField: boosters.boosters.length,
       gigabackSec: Math.round(gigabackSec * 100) / 100,
       rescueCharges,
+      safewallSec: Math.round(safewallSec * 100) / 100,
     }),
     pause: () => app.ticker.stop(),
     resume: () => app.ticker.start(),

@@ -143,7 +143,7 @@ export function drawRrlShatter(p: Platform, progress: number): void {
  * затем на миг контур двоится (маджента-призрак ↖, белый ↘ — анаглиф) и схлопывается
  * назад. Перерисовывается каждый кадр по `p.animT`. Форма-намёк «это проекция, не опора».
  */
-export function drawFakeHologram(p: Platform): void {
+export function drawFakeHologram(p: Platform, reveal = false): void {
   const h = balance.platforms.height
   const w = p.width
   const cycle = balance.obstacles.fake.shimmerSec
@@ -159,4 +159,9 @@ export function drawFakeHologram(p: Platform): void {
     g.roundRect(-w / 2 + ox, oy, w, h, 4).stroke({ color: 0xffffff, width: 1.5, alpha: 0.6 * split })
   }
   g.roundRect(-w / 2, 0, w, h, 4).fill({ color: 0xffffff, alpha: 1 - 0.28 * split })
+
+  if (reveal) {
+    // SafeWall подсветил: электрик-блю рамка — «это фейк»
+    g.roundRect(-w / 2 - 2, -2, w + 4, h + 4, 5).stroke({ color: 0x1f3fff, width: 2.5 })
+  }
 }

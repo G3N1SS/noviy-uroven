@@ -37,7 +37,13 @@ export class Spawner {
     this.spawnAt(screenW / 2, startPlatformY, 'vols') // старт всегда ВОЛС
   }
 
-  update(cameraOffset: number, screenW: number, screenH: number, dtSec: number): void {
+  update(
+    cameraOffset: number,
+    screenW: number,
+    screenH: number,
+    dtSec: number,
+    revealFakes = false,
+  ): void {
     // 1) Per-step динамика типов
     for (const p of this.platforms) {
       if (!p.active) continue
@@ -82,9 +88,9 @@ export class Spawner {
           p.view.alpha = 0.82 + 0.18 * (0.5 + 0.5 * Math.sin(p.animT * 9))
         }
       } else if (p.type === 'fake') {
-        // голограмма: переливание цельная ↔ двоящийся контур
+        // голограмма: переливание цельная ↔ двоящийся контур (+ подсветка при SafeWall)
         p.animT += dtSec
-        drawFakeHologram(p)
+        drawFakeHologram(p, revealFakes)
       }
 
       // Landing-bounce (ВОЛС/движущаяся): проседание view.y при касании, коллизия не трогается
