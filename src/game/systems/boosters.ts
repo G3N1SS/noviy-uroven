@@ -6,14 +6,13 @@ import { createBooster, drawBooster, type Booster, type BoosterType } from '../e
  * Спавн и сбор бустеров (конспект 2.8). Каждый тип — со своим кадансом (spawnEvery платформ).
  * Сбор пролётом. Иконки парят (bob) + слегка вращаются/пульсируют — анимация через view.
  *
- * Все 4 бустера включены.
+ * 3 бустера с разными механиками (Вечные минуты убраны — дублировали MiXX-щит по эффекту).
  */
-const ENABLED: BoosterType[] = ['gigaback', 'mixxShield', 'eternal', 'safewall']
+const ENABLED: BoosterType[] = ['gigaback', 'mixxShield', 'safewall']
 
 const SPAWN_EVERY: Record<BoosterType, number> = {
   gigaback: balance.boosters.gigaback.spawnEvery,
   mixxShield: balance.boosters.mixxShield.spawnEvery,
-  eternal: balance.boosters.eternalMinutes.spawnEvery,
   safewall: balance.boosters.safeWall.spawnEvery,
 }
 

@@ -180,7 +180,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   let crystalTotal = 0 // кошелёк: НЕ обнуляется при смерти (кристаллы сохраняются)
   let controlLockSec = 0 // потеря управления после помехи (сек)
   let gigabackSec = 0 // остаток действия Гигабэка (×2 кристаллы), сек
-  let rescueCharges = 0 // заряды спасения (MiXX-щит / Вечные минуты) — батут от нижнего края
+  let rescueCharges = 0 // заряды спасения (MiXX-щит) — батут от нижнего края
   let shieldT = 0 // фаза анимации ауры щита
   let safewallSec = 0 // SafeWall: иммунитет к помехам + подсветка фейков, сек
 
@@ -298,7 +298,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     for (const type of boosters.collect(player.x, player.y, r)) {
       if (type === 'gigaback') {
         gigabackSec = balance.boosters.gigaback.durationMs / 1000
-      } else if (type === 'mixxShield' || type === 'eternal') {
+      } else if (type === 'mixxShield') {
         rescueCharges = Math.min(balance.boosters.rescueMax, rescueCharges + 1)
       } else if (type === 'safewall') {
         safewallSec = balance.boosters.safeWall.durationMs / 1000

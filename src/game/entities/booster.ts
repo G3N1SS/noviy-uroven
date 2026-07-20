@@ -1,11 +1,11 @@
 import { Graphics } from 'pixi.js'
 import { balance } from '../config/balance'
 
-export type BoosterType = 'gigaback' | 'mixxShield' | 'eternal' | 'safewall'
+export type BoosterType = 'gigaback' | 'mixxShield' | 'safewall'
 
 /**
  * Бустер = продукт T2 (конспект 2.8). Собирается пролётом сквозь иконку.
- * Визуалы — плейсхолдеры по описанию (кольцевая стрелка / гексагон M / ∞ / щит),
+ * Визуалы — плейсхолдеры по описанию (двойной кристалл / гексагон M / щит),
  * анимация парения — через view.transform в менеджере (иконка рисуется один раз).
  */
 export interface Booster {
@@ -21,7 +21,6 @@ export interface Booster {
 const COLORS: Record<BoosterType, number> = {
   gigaback: parseInt(balance.boosters.gigaback.color.slice(1), 16),
   mixxShield: parseInt(balance.boosters.mixxShield.color.slice(1), 16),
-  eternal: parseInt(balance.boosters.eternalMinutes.color.slice(1), 16),
   safewall: parseInt(balance.boosters.safeWall.color.slice(1), 16),
 }
 
@@ -93,12 +92,6 @@ export function drawBooster(b: Booster): void {
         .lineTo(r * 0.35, -r * 0.28)
         .lineTo(r * 0.35, r * 0.28)
       g.stroke({ color: c, width: 2.5, cap: 'round', join: 'round' })
-      break
-    }
-    case 'eternal': {
-      // ∞ (не сгорающие пакеты)
-      g.circle(-r * 0.4, 0, r * 0.4).stroke({ color: c, width: 3 })
-      g.circle(r * 0.4, 0, r * 0.4).stroke({ color: c, width: 3 })
       break
     }
     case 'safewall': {
