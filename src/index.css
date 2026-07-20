@@ -1,5 +1,10 @@
 :root {
-  /* Палитра T2 (СТРОГО) — см. CLAUDE.md / конспект 3.2 */
+  /**
+ * Глобальные токены + ресеты. По канону БЭМ глобалка (сброс тега, палитра-токены)
+ * остаётся вне блоков; компоненты (DOM/UI) пишем классами block__element--modifier
+ * в своих *.css рядом с модулем. См. src/game/controls/pauseMenu.css.
+ */
+/* Палитра T2 (СТРОГО) — см. CLAUDE.md / конспект 3.2 */
   --t2-black: #000000;
   --t2-white: #ffffff;
   --t2-magenta: #ff3495;
@@ -38,4 +43,10 @@ body {
 
 canvas {
   display: block;
+}
+
+/* Блок `game-canvas` — контейнер PixiJS-канваса (на весь вьюпорт) */
+.game-canvas {
+  position: fixed;
+  inset: 0;
 }

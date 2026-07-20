@@ -35,5 +35,5 @@ export function GameCanvas() {
     }
   }, [])
 
-  return <div ref={containerRef} style={{ position: 'fixed', inset: 0 }} />
+  return <div ref={containerRef} className="game-canvas" />
 }
