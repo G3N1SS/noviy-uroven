@@ -114,23 +114,43 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   window.addEventListener('keydown', onKeyDown)
   window.addEventListener('keyup', onKeyUp)
 
+  // HUD (вариант A): слева-сверху высота (стенсил-цифры — фишка T2) + «м» мельче,
+  // под ней кристаллы (ромб + число). Правый верхний угол — только кнопка паузы (DOM).
+  const STENCIL = 'Big Shoulders Stencil, Manrope, sans-serif'
   const hud = new Text({
-    text: '0 m',
-    style: { fill: 0xffffff, fontFamily: 'Manrope, sans-serif', fontSize: 34, fontWeight: '800' },
+    text: '0',
+    style: { fill: 0xffffff, fontFamily: STENCIL, fontSize: 44, fontWeight: '700' },
   })
   hud.x = 16
-  hud.y = 12
-  app.stage.addChild(hud)
+  hud.y = 8
+  const hudUnit = new Text({
+    text: 'м',
+    style: { fill: 0xffffff, fontFamily: STENCIL, fontSize: 21, fontWeight: '700' },
+  })
+  app.stage.addChild(hud, hudUnit)
 
-  // Счётчик кристаллов справа-сверху (ромб-иконка + число). Число right-anchored.
+  // Кристаллы — под высотой: ромб-иконка + число, оба прижаты влево.
   const crystalIcon = new Graphics()
-  drawCrystal({ view: crystalIcon, x: 0, y: 0, value: 0, radius: 10, active: true }, false)
+  drawCrystal({ view: crystalIcon, x: 0, y: 0, value: 0, radius: 8, active: true }, false)
   const crystalHud = new Text({
     text: '0',
-    style: { fill: 0xffffff, fontFamily: 'Manrope, sans-serif', fontSize: 30, fontWeight: '800' },
+    style: { fill: 0xffffff, fontFamily: 'Manrope, sans-serif', fontSize: 18, fontWeight: '800' },
   })
-  crystalHud.anchor.set(1, 0)
   app.stage.addChild(crystalIcon, crystalHud)
+
+  // Canvas/Pixi НЕ триггерит подгрузку @font-face (в отличие от DOM), поэтому шрифты
+  // грузим явно, затем перерисовываем HUD-тексты (иначе «м»/«0» застынут в fallback).
+  void Promise.all([
+    document.fonts.load('700 44px "Big Shoulders Stencil"'),
+    document.fonts.load('800 18px "Manrope"'),
+    document.fonts.load('800 26px "Manrope"'),
+  ]).then(() => {
+    for (const t of [hud, hudUnit, crystalHud, banner]) {
+      const s = t.text
+      t.text = ''
+      t.text = s
+    }
+  })
 
   // Баннер перехода эпохи (по центру сверху), дерзким тоном. Скрыт по умолчанию.
   const banner = new Text({
@@ -298,16 +318,19 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     // 8) Счёт (высота в метрах)
     if (player.y < minY) minY = player.y
     const heightMeters = -minY / balance.score.pxPerMeter
-    hud.text = `${Math.floor(heightMeters)} m`
+    hud.text = `${Math.floor(heightMeters)}`
 
     // 8b) Эпохи: смена фона + баннер перехода по высоте
     epochs.update(heightMeters, dtSec)
 
-    // 9) HUD-позиции: кристаллы справа-сверху, баннер по центру
-    crystalHud.x = w - 16
-    crystalHud.y = 12
-    crystalIcon.x = w - 16 - crystalHud.width - 14
-    crystalIcon.y = 26
+    // 9) HUD-позиции (вариант A): слева высота + «м» у baseline, ниже кристаллы; баннер центр
+    hudUnit.x = hud.x + hud.width + 5
+    hudUnit.y = hud.y + hud.height - hudUnit.height - 3 // прижать к низу цифр
+    const rowY = hud.y + hud.height + 6
+    crystalIcon.x = 16 + 8
+    crystalIcon.y = rowY + 9
+    crystalHud.x = 16 + 20
+    crystalHud.y = rowY
     banner.x = w / 2
     banner.y = h * 0.26
 

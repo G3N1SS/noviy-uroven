@@ -23,7 +23,7 @@ export function createPauseMenu(opts: PauseMenuOptions): { destroy: () => void }
   const pauseBtn = document.createElement('button')
   pauseBtn.setAttribute('aria-label', 'Пауза')
   pauseBtn.style.cssText =
-    'position:fixed;top:58px;right:10px;width:44px;height:44px;border-radius:14px;' +
+    'position:fixed;top:10px;right:10px;width:44px;height:44px;border-radius:14px;' +
     'border:2px solid #fff;background:transparent;display:flex;align-items:center;' +
     'justify-content:center;gap:5px;cursor:pointer;z-index:15;-webkit-tap-highlight-color:transparent;'
   for (let i = 0; i < 2; i++) {
