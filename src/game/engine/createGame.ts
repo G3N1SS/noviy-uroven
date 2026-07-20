@@ -4,8 +4,10 @@ import { createPlayer } from '../entities/player'
 import { Spawner } from '../systems/spawner'
 import { CrystalManager } from '../systems/crystals'
 import { ObstacleManager } from '../systems/obstacles'
+import { BoosterManager } from '../systems/boosters'
 import { EpochManager } from '../systems/epochs'
 import { drawCrystal } from '../entities/crystal'
+import { boosterColor } from '../entities/booster'
 import { ControlsManager } from '../controls/controlsManager'
 import { createPauseMenu } from '../controls/pauseMenu'
 
@@ -47,13 +49,21 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   world.addChild(crystalLayer)
   const obstacleLayer = new Container()
   world.addChild(obstacleLayer)
+  const boosterLayer = new Container()
+  world.addChild(boosterLayer)
 
   const player = createPlayer()
+  // Аура вокруг «сигнала» (цвет активного бустера) — за телом персонажа
+  const aura = new Graphics()
+  aura.circle(0, 0, balance.player.radius * 2.1).fill({ color: 0xffffff })
+  aura.visible = false
+  player.view.addChildAt(aura, 0)
   world.addChild(player.view)
 
   const spawner = new Spawner(platformLayer)
   const crystals = new CrystalManager(crystalLayer)
   const obstacles = new ObstacleManager(obstacleLayer)
+  const boosters = new BoosterManager(boosterLayer)
   const controls = new ControlsManager(app.canvas)
   // Меню паузы (по ТЗ выбор управления живёт на паузе). reset() — hoisted-функция ниже.
   const pauseMenu = createPauseMenu({
@@ -115,11 +125,16 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   app.stage.addChild(banner)
   const epochs = new EpochManager(app, banner)
 
+  // HUD активного (временно́го) бустера — справа-внизу, кольцевой таймер (конспект 3.3)
+  const boosterHud = new Graphics()
+  app.stage.addChild(boosterHud)
+
   // --- состояние партии ---
   let cameraOffset = 0
   let minY = 0 // самая большая высота (наименьший y) за партию — для счёта
   let crystalTotal = 0 // кошелёк: НЕ обнуляется при смерти (кристаллы сохраняются)
   let controlLockSec = 0 // потеря управления после помехи (сек)
+  let gigabackSec = 0 // остаток действия Гигабэка (×2 кристаллы), сек
 
   const { radius: r } = balance.player
   const { maxHorizontalSpeed, horizontalDampingPerSec } = balance.physics
@@ -145,8 +160,10 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     spawner.reset(balance.start.platformOffsetY, w)
     crystals.reset(balance.start.platformOffsetY) // кошелёк crystalTotal НЕ трогаем
     obstacles.reset(balance.start.platformOffsetY)
+    boosters.reset(balance.start.platformOffsetY)
     epochs.reset() // фон вернётся к эпохе 1 на первом апдейте
     controlLockSec = 0
+    gigabackSec = 0
     controls.reset() // калибровка нуля наклона на старте партии
   }
 
@@ -221,15 +238,23 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     if (targetOffset > cameraOffset) cameraOffset = targetOffset
     world.y = cameraOffset
 
-    // 6) Генерация/чистка платформ + кристаллов + помех
+    // 6) Генерация/чистка платформ + кристаллов + помех + бустеров
     spawner.update(cameraOffset, w, h, dtSec)
     crystals.update(cameraOffset, w, h)
     obstacles.update(cameraOffset, w, h, dtSec)
+    boosters.update(cameraOffset, w, h, dtSec)
 
-    // 7) Сбор кристаллов пролётом
+    // 6b) Сбор бустеров пролётом
+    for (const type of boosters.collect(player.x, player.y, r)) {
+      if (type === 'gigaback') gigabackSec = balance.boosters.gigaback.durationMs / 1000
+    }
+    // тики таймеров бустеров
+    if (gigabackSec > 0) gigabackSec = Math.max(0, gigabackSec - dtSec)
+
+    // 7) Сбор кристаллов пролётом (Гигабэк ×2)
     const got = crystals.collect(player.x, player.y, r)
     if (got > 0) {
-      crystalTotal += got
+      crystalTotal += got * (gigabackSec > 0 ? 2 : 1)
       crystalHud.text = `${crystalTotal}`
     }
 
@@ -248,6 +273,28 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     crystalIcon.y = 26
     banner.x = w / 2
     banner.y = h * 0.26
+
+    // 9b) Аура героя цветом активного бустера (сейчас — Гигабэк)
+    if (gigabackSec > 0) {
+      aura.visible = true
+      aura.tint = boosterColor('gigaback')
+      aura.alpha = 0.14 + 0.07 * Math.sin(gigabackSec * 6)
+    } else {
+      aura.visible = false
+    }
+
+    // 9c) HUD бустера справа-внизу: иконка-цвет + кольцевой таймер
+    boosterHud.clear()
+    if (gigabackSec > 0) {
+      const cx = w - 40
+      const cy = h - 40
+      const rad = 18
+      const frac = gigabackSec / (balance.boosters.gigaback.durationMs / 1000)
+      boosterHud.circle(cx, cy, rad).fill({ color: boosterColor('gigaback'), alpha: 0.18 })
+      boosterHud
+        .arc(cx, cy, rad, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2)
+        .stroke({ color: boosterColor('gigaback'), width: 3 })
+    }
 
     // 10) Смерть: ушёл за нижний край → рестарт (камера вниз не едет)
     if (player.y + cameraOffset > h + r) reset()
@@ -298,6 +345,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     spawner,
     crystals,
     obstacles,
+    boosters,
     controls,
     keys,
     state: () => ({
@@ -314,6 +362,8 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       banner: banner.visible ? banner.text : null,
       obstaclesOnField: obstacles.obstacles.length,
       controlLocked: controlLockSec > 0,
+      boostersOnField: boosters.boosters.length,
+      gigabackSec: Math.round(gigabackSec * 100) / 100,
     }),
     pause: () => app.ticker.stop(),
     resume: () => app.ticker.start(),
