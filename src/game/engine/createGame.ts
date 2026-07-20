@@ -283,17 +283,32 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       aura.visible = false
     }
 
-    // 9c) HUD бустера справа-внизу: иконка-цвет + кольцевой таймер
+    // 9c) HUD бустера справа-внизу: иконка в тёмном круге + тающая кольцевая дуга (вариант B)
     boosterHud.clear()
     if (gigabackSec > 0) {
-      const cx = w - 40
-      const cy = h - 40
-      const rad = 18
-      const frac = gigabackSec / (balance.boosters.gigaback.durationMs / 1000)
-      boosterHud.circle(cx, cy, rad).fill({ color: boosterColor('gigaback'), alpha: 0.18 })
+      const cx = w - 38
+      const cy = h - 38
+      const rad = 20
+      const col = boosterColor('gigaback')
+      // тёмный диск-подложка
+      boosterHud.circle(cx, cy, rad).fill({ color: 0x1a1a1a })
+      // мини-иконка: два ромба (статично)
+      const dv = 7
+      const dh = 5
+      const off = 6
       boosterHud
-        .arc(cx, cy, rad, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2)
-        .stroke({ color: boosterColor('gigaback'), width: 3 })
+        .poly([cx - off, cy - dv, cx - off + dh, cy, cx - off, cy + dv, cx - off - dh, cy])
+        .fill({ color: col })
+      boosterHud
+        .poly([cx + off, cy - dv, cx + off + dh, cy, cx + off, cy + dv, cx + off - dh, cy])
+        .stroke({ color: col, width: 1.5 })
+      // тающая дуга таймера — ОТДЕЛЬНЫЙ подпуть (moveTo рвёт линию от предыдущей заливки)
+      const frac = gigabackSec / (balance.boosters.gigaback.durationMs / 1000)
+      const a0 = -Math.PI / 2
+      const a1 = a0 + frac * Math.PI * 2
+      boosterHud.moveTo(cx + rad * Math.cos(a0), cy + rad * Math.sin(a0))
+      boosterHud.arc(cx, cy, rad, a0, a1)
+      boosterHud.stroke({ color: col, width: 3.5, cap: 'round' })
     }
 
     // 10) Смерть: ушёл за нижний край → рестарт (камера вниз не едет)
@@ -346,6 +361,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     crystals,
     obstacles,
     boosters,
+    boosterHud,
     controls,
     keys,
     state: () => ({
