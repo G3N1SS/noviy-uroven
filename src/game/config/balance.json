@@ -50,7 +50,7 @@
       "spawnEveryPx": 820,
       "glitchCycleSec": 1.4
     },
-    "fake": { "startMeters": 1500, "shimmerSec": 2.8 }
+    "fake": { "startMeters": 1500, "shimmerSec": 1.8 }
   },
   "crystals": {
     "smallRadius": 9,
