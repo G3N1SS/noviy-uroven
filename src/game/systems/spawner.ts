@@ -23,15 +23,21 @@ import {
 export class Spawner {
   readonly platforms: Platform[] = []
   private pool: Platform[] = []
-  /** Чистый планировщик решений (что/где спавнить). Спавнер только рисует и анимирует. */
-  private readonly planner = new PlatformPlanner()
+  /**
+   * Чистый планировщик решений (что/где спавнить) + ИСТОРИЯ placements.
+   * Единый источник правды: спавнер рисует, обстаклы гейтят себя через `isObstaclePassable`,
+   * кристаллы кладутся на дуги прыжка между опорами. `planner` выставлен наружу.
+   */
+  readonly planner = new PlatformPlanner()
 
   constructor(private readonly world: Container) {}
 
   reset(startPlatformY: number, screenW: number): void {
     for (const p of this.platforms) this.recycle(p)
     this.platforms.length = 0
-    this.planner.reset(startPlatformY)
+    // Регистрируем стартовую ВОЛС в истории планировщика (она сама её не производит —
+    // спавним вручную), чтобы валидатор и кристалл-планировщик видели точку старта.
+    this.planner.reset(startPlatformY, screenW / 2)
     this.spawnAt(screenW / 2, startPlatformY, 'vols') // старт всегда ВОЛС
   }
 

@@ -1,18 +1,28 @@
 import { Container } from 'pixi.js'
 import { balance } from '../config/balance'
 import { createObstacle, drawObstacle, type Obstacle } from '../entities/obstacle'
+import type { PlatformPlanner } from './generation'
+import { isObstaclePassable } from './generation'
 
 /**
  * Помехи (конспект 2.9). Спавнятся в воздухе выше `startMeters` (эпоха 2) с шагом
- * `spawnEveryPx`, случайный X. Object pooling + чистка вниз. Сбор столкновением
- * (окружность-окружность); попадание одноразовое (облако «разряжается»).
+ * `spawnEveryPx`. Планировщик проходимости (`isObstaclePassable`) следит, чтобы
+ * облако НИКОГДА не перекрывало путь: у игрока всегда есть коридор обхода к следующей
+ * опоре с учётом реальной физики прыжка. Если ни одна X-позиция не проходит — помеха
+ * пропускается (лучше без неё, чем нечестная смерть).
+ *
+ * Object pooling + чистка вниз. Сбор столкновением (окружность-окружность);
+ * попадание одноразовое (облако «разряжается»).
  */
 export class ObstacleManager {
   readonly obstacles: Obstacle[] = []
   private pool: Obstacle[] = []
   private nextY = 0
 
-  constructor(private readonly layer: Container) {}
+  constructor(
+    private readonly layer: Container,
+    private readonly planner: PlatformPlanner,
+  ) {}
 
   reset(startY: number): void {
     for (const o of this.obstacles) this.recycle(o)
@@ -29,14 +39,12 @@ export class ObstacleManager {
     }
 
     const spawnUntilY = -cameraOffset - balance.spawn.spawnAheadScreens * screenH
-    const { spawnEveryPx, startMeters, radius } = balance.obstacles.interference
+    const { spawnEveryPx, startMeters } = balance.obstacles.interference
 
     while (this.nextY > spawnUntilY) {
       const meters = -this.nextY / balance.score.pxPerMeter
       if (meters >= startMeters) {
-        const margin = radius + 10
-        const x = margin + Math.random() * (screenW - 2 * margin)
-        this.spawnAt(x, this.nextY)
+        this.trySpawnPassable(this.nextY, screenW)
       }
       this.nextY -= spawnEveryPx
     }
@@ -49,6 +57,27 @@ export class ObstacleManager {
         this.obstacles.splice(i, 1)
       }
     }
+  }
+
+  /**
+   * Ищет X, при котором облако (nx, y) проходимо: пробует до K случайных позиций,
+   * фильтрует через `isObstaclePassable`. Не нашли — пропускаем спавн (честнее пусто,
+   * чем ловушка).
+   */
+  private trySpawnPassable(y: number, screenW: number): void {
+    const { radius } = balance.obstacles.interference
+    const margin = radius + 10
+    const landables = this.planner.landables()
+    const allPlatforms = this.planner.history
+    const K = 12
+    for (let i = 0; i < K; i++) {
+      const x = margin + Math.random() * (screenW - 2 * margin)
+      if (isObstaclePassable(x, y, landables, screenW, allPlatforms)) {
+        this.spawnAt(x, y)
+        return
+      }
+    }
+    // Не нашли безопасного места — не спавним (пропуск = игрок не встретит непроходимое облако).
   }
 
   /** Столкновение с игроком. Возвращает true, если попал (облако при этом «разряжается»). */
