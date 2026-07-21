@@ -10,6 +10,8 @@ import { drawCrystal } from '../entities/crystal'
 import { boosterColor } from '../entities/booster'
 import { ControlsManager } from '../controls/controlsManager'
 import { createPauseMenu } from '../controls/pauseMenu'
+import { createGameOver } from '../../features/gameOver/gameOver'
+import { getBestHeight, setBestHeight, getCrystalTotal, setCrystalTotal } from '../../shared/storage/local'
 
 export interface GameHandle {
   app: Application
@@ -86,8 +88,10 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   world.addChild(player.view)
 
   const spawner = new Spawner(platformLayer)
-  const crystals = new CrystalManager(crystalLayer)
-  const obstacles = new ObstacleManager(obstacleLayer)
+  // Кристаллы и помехи консультируются с планировщиком спавнера (единый источник правды):
+  // помехи гейтят себя через isObstaclePassable, кристаллы кладутся на дуги прыжка.
+  const crystals = new CrystalManager(crystalLayer, spawner.planner)
+  const obstacles = new ObstacleManager(obstacleLayer, spawner.planner)
   const boosters = new BoosterManager(boosterLayer)
   const controls = new ControlsManager(app.canvas)
   // Меню паузы (по ТЗ выбор управления живёт на паузе). reset() — hoisted-функция ниже.
@@ -177,7 +181,10 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   // --- состояние партии ---
   let cameraOffset = 0
   let minY = 0 // самая большая высота (наименьший y) за партию — для счёта
-  let crystalTotal = 0 // кошелёк: НЕ обнуляется при смерти (кристаллы сохраняются)
+  let crystalsThisRun = 0 // кристаллы, собранные ЗА ТЕКУЩУЮ партию (для экрана Game Over)
+  // Кошелёк и рекорд переживают перезагрузку (localStorage; полноценный IndexedDB — Этап 5).
+  let crystalTotal = getCrystalTotal()
+  let bestHeight = getBestHeight()
   let controlLockSec = 0 // потеря управления после помехи (сек)
   let gigabackSec = 0 // остаток действия Гигабэка (×2 кристаллы), сек
   let rescueCharges = 0 // заряды спасения (MiXX-щит) — батут от нижнего края
@@ -205,6 +212,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     player.vy = -jumpVel // стартовый «пинок» вверх (px/сек)
     cameraOffset = h * balance.camera.followRatio
     minY = 0
+    crystalsThisRun = 0
     spawner.reset(balance.start.platformOffsetY, w)
     crystals.reset(balance.start.platformOffsetY) // кошелёк crystalTotal НЕ трогаем
     obstacles.reset(balance.start.platformOffsetY)
@@ -215,6 +223,33 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     rescueCharges = 0
     safewallSec = 0
     controls.reset() // калибровка нуля наклона на старте партии
+  }
+
+  // Экран Game Over (DOM-оверлей, БЭМ). Открывается на смерть и держит паузу.
+  const gameOver = createGameOver({
+    onRestart: () => {
+      reset()
+      app.ticker.start()
+    },
+  })
+  function die() {
+    app.ticker.stop()
+    const heightMeters = Math.floor(-minY / balance.score.pxPerMeter)
+    const beaten = heightMeters > bestHeight
+    if (beaten) {
+      bestHeight = heightMeters
+      setBestHeight(heightMeters)
+    }
+    // Кошелёк уже в crystalTotal (пишем на каждый пикап); дублируем в LS на смерть — надёжнее.
+    setCrystalTotal(crystalTotal)
+    gameOver.show({
+      height: heightMeters,
+      best: bestHeight,
+      crystalsGained: crystalsThisRun,
+      crystalTotal,
+      beaten,
+      epochBanner: epochs.deathBanner(heightMeters),
+    })
   }
 
   reset()
@@ -311,8 +346,11 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     // 7) Сбор кристаллов пролётом (Гигабэк ×2)
     const got = crystals.collect(player.x, player.y, r)
     if (got > 0) {
-      crystalTotal += got * (gigabackSec > 0 ? 2 : 1)
+      const gained = got * (gigabackSec > 0 ? 2 : 1)
+      crystalTotal += gained
+      crystalsThisRun += gained
       crystalHud.text = `${crystalTotal}`
+      setCrystalTotal(crystalTotal) // копим на диск инкрементально — на случай крэша вкладки
     }
 
     // 8) Счёт (высота в метрах)
@@ -396,7 +434,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       boosterHud.poly(hex).fill({ color: 0x1a1a1a }).stroke({ color: 0xffffff, width: 2 })
     }
 
-    // 10) Нижний край: спасение батутом (заряд щита/вечных) → иначе смерть/рестарт
+    // 10) Нижний край: спасение батутом (заряд щита/вечных) → иначе экран Game Over
     if (player.y + cameraOffset > h + r) {
       if (rescueCharges > 0) {
         rescueCharges--
@@ -404,7 +442,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
         player.vy = -jumpVel * balance.boosters.rescueBounceFactor // мощный отскок вверх
         controlLockSec = 0
       } else {
-        reset()
+        die()
       }
     }
 
@@ -495,6 +533,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     window.removeEventListener('keyup', onKeyUp)
     controls.destroy()
     pauseMenu.destroy()
+    gameOver.destroy()
     app.destroy(true, { children: true })
   }
 

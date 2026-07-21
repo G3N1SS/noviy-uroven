@@ -1,0 +1,133 @@
+/**
+ * Блок `over` — экран Game Over (БЭМ). Единая DOM-поверхность поверх канваса.
+ * Соглашения проекта: цвета — из токенов :root (--t2-*, --surface-*), никаких hex
+ * в CSS. Состояния переключаются классами-модификаторами.
+ */
+
+.over__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: 'Manrope', system-ui, sans-serif;
+}
+
+.over__overlay--open {
+  display: flex;
+}
+
+.over__card {
+  width: min(360px, 86vw);
+  padding: 28px 24px;
+  background: var(--surface-1);
+  border: 1px solid var(--surface-2);
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  position: relative;
+}
+
+/* Плашка «РЕКОРД» — маджента, видна только при новом рекорде */
+.over__badge {
+  display: none;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--t2-magenta);
+  color: var(--t2-black);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.over__badge--visible {
+  display: inline-block;
+}
+
+.over__card--beaten {
+  border-color: var(--t2-magenta);
+}
+
+/* Высота крупно (стенсил — фишка бренда). Halvar Stencil придёт на Этапе 3;
+   пока — Big Shoulders Stencil (fallback, уже загружен через @fontsource). */
+.over__height {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--t2-white);
+  font-family: 'Big Shoulders Stencil', 'Manrope', sans-serif;
+  font-weight: 700;
+  line-height: 0.9;
+}
+
+.over__height-num {
+  font-size: 96px;
+}
+
+.over__height-unit {
+  font-size: 32px;
+}
+
+.over__narrative {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--t2-white);
+  opacity: 0.75;
+  text-align: center;
+  padding: 0 8px;
+}
+
+/* Строка статистики (бенто-две-колонки) */
+.over__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.over__stat {
+  padding: 12px;
+  background: var(--surface-2);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.over__stat-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--t2-white);
+  opacity: 0.55;
+}
+
+.over__stat-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--t2-white);
+}
+
+/* Кнопки */
+.over__btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  border: none;
+}
+
+.over__btn--primary {
+  background: var(--t2-magenta);
+  color: var(--t2-black);
+}

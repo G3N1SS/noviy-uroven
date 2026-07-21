@@ -71,4 +71,22 @@ export class EpochManager {
       if (this.bannerTimer <= 0) this.banner.visible = false
     }
   }
+
+  /** Дерзкий нарратив для экрана Game Over по достигнутой высоте (конспект 2.13). */
+  deathBanner(heightMeters: number): string {
+    const e = this.epochFor(heightMeters)
+    switch (e.id) {
+      case 1:
+        return 'Застрял на 2G. Даже обидно'
+      case 2:
+        return 'Застрял на 3G. Даже обидно'
+      case 3:
+        return 'LTE и стоп. Бывает'
+      case 4:
+        return '5G оказался коварнее'
+      case 5:
+      default:
+        return 'Будущее подождёт следующей попытки'
+    }
+  }
 }
