@@ -1,11 +1,13 @@
 import { Application, Container, Graphics, Text } from 'pixi.js'
 import { balance } from '../config/balance'
 import { createPlayer } from '../entities/player'
+import { Trail } from '../entities/trail'
 import { Spawner } from '../systems/spawner'
 import { CrystalManager } from '../systems/crystals'
 import { ObstacleManager } from '../systems/obstacles'
 import { BoosterManager } from '../systems/boosters'
 import { EpochManager } from '../systems/epochs'
+import { BackgroundManager } from '../systems/background'
 import { drawCrystal } from '../entities/crystal'
 import { boosterColor } from '../entities/booster'
 import { ControlsManager } from '../controls/controlsManager'
@@ -36,6 +38,10 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   })
   parent.appendChild(app.canvas)
   app.renderer.resize(window.innerWidth, window.innerHeight)
+
+  // Параллакс-фон эпохи — самый нижний слой сцены (за миром).
+  const background = new BackgroundManager(app)
+  app.stage.addChild(background.root)
 
   // Мир двигает камера (только по вертикали). HUD — отдельно, поверх, не двигается.
   const world = new Container()
@@ -85,6 +91,9 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   }
   shieldAura.visible = false
   player.view.addChildAt(shieldAura, 2)
+  // Шлейф — в мировых координатах, СРАЗУ под игроком (поверх платформ/кристаллов)
+  const trail = new Trail()
+  world.addChild(trail.view)
   world.addChild(player.view)
 
   const spawner = new Spawner(platformLayer)
@@ -218,10 +227,12 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     obstacles.reset(balance.start.platformOffsetY)
     boosters.reset(balance.start.platformOffsetY)
     epochs.reset() // фон вернётся к эпохе 1 на первом апдейте
+    background.reset() // сцена эпохи 1 мгновенно
     controlLockSec = 0
     gigabackSec = 0
     rescueCharges = 0
     safewallSec = 0
+    trail.clear()
     controls.reset() // калибровка нуля наклона на старте партии
   }
 
@@ -358,8 +369,9 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     const heightMeters = -minY / balance.score.pxPerMeter
     hud.text = `${Math.floor(heightMeters)}`
 
-    // 8b) Эпохи: смена фона + баннер перехода по высоте
+    // 8b) Эпохи: смена фона + баннер перехода по высоте; параллакс-сцена фона
     epochs.update(heightMeters, dtSec)
+    background.update(dtSec, cameraOffset, epochs.current)
 
     // 9) HUD-позиции (вариант A): слева высота + «м» у baseline, ниже кристаллы; баннер центр
     hudUnit.x = hud.x + hud.width + 5
@@ -446,9 +458,11 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       }
     }
 
-    // 11) Синхронизация вью
+    // 11) Синхронизация вью + шлейф. Якорь шлейфа — точка КАСАНИЯ (низ перса, y+r),
+    // а не центр: тогда разворот на приземлении садится на платформу, а не висит над ней.
     player.view.x = player.x
     player.view.y = player.y
+    trail.update(player.x, player.y + r, dtSec, w)
   }
 
   // Фиксированный шаг симуляции (частота — balance.loop.simHz). Копим реальное время
