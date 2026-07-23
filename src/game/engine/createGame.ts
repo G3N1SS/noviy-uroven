@@ -8,6 +8,7 @@ import { ObstacleManager } from '../systems/obstacles'
 import { BoosterManager } from '../systems/boosters'
 import { EpochManager } from '../systems/epochs'
 import { BackgroundManager } from '../systems/background'
+import { ParticleFx } from '../systems/particles'
 import { drawCrystal } from '../entities/crystal'
 import { boosterColor } from '../entities/booster'
 import { ControlsManager } from '../controls/controlsManager'
@@ -95,6 +96,12 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   const trail = new Trail()
   world.addChild(trail.view)
   world.addChild(player.view)
+  // Частицы мира (вспышки кристаллов, волны бустеров, «+N») — поверх игрока
+  const fx = new ParticleFx()
+  world.addChild(fx.view)
+  // Конфетти рекорда — в ЭКРАННЫХ координатах, поверх мира, под HUD
+  const screenFx = new ParticleFx()
+  app.stage.addChild(screenFx.view)
 
   const spawner = new Spawner(platformLayer)
   // Кристаллы и помехи консультируются с планировщиком спавнера (единый источник правды):
@@ -205,6 +212,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   let rescueCharges = 0 // заряды спасения (MiXX-щит) — батут от нижнего края
   let shieldT = 0 // фаза анимации ауры щита
   let safewallSec = 0 // SafeWall: иммунитет к помехам + подсветка фейков, сек
+  let recordCelebrated = false // конфетти рекорда — один раз за партию
 
   const { radius: r } = balance.player
   const { maxHorizontalSpeed, horizontalDampingPerSec } = balance.physics
@@ -239,6 +247,9 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     rescueCharges = 0
     safewallSec = 0
     trail.clear()
+    fx.clear()
+    screenFx.clear()
+    recordCelebrated = false
     controls.reset() // калибровка нуля наклона на старте партии
   }
 
@@ -346,8 +357,9 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     obstacles.update(cameraOffset, w, h, dtSec)
     boosters.update(cameraOffset, w, h, dtSec)
 
-    // 6b) Сбор бустеров пролётом
+    // 6b) Сбор бустеров пролётом (+ радиальная волна цвета бустера)
     for (const type of boosters.collect(player.x, player.y, r)) {
+      fx.ring(player.x, player.y, boosterColor(type))
       if (type === 'gigaback') {
         gigabackSec = balance.boosters.gigaback.durationMs / 1000
       } else if (type === 'mixxShield') {
@@ -360,7 +372,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     if (gigabackSec > 0) gigabackSec = Math.max(0, gigabackSec - dtSec)
     if (safewallSec > 0) safewallSec = Math.max(0, safewallSec - dtSec)
 
-    // 7) Сбор кристаллов пролётом (Гигабэк ×2)
+    // 7) Сбор кристаллов пролётом (Гигабэк ×2) + вспышка осколков и флоат «+N»
     const got = crystals.collect(player.x, player.y, r)
     if (got > 0) {
       const gained = got * (gigabackSec > 0 ? 2 : 1)
@@ -368,6 +380,8 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       crystalsThisRun += gained
       crystalHud.text = `${crystalTotal}`
       setCrystalTotal(crystalTotal) // копим на диск инкрементально — на случай крэша вкладки
+      fx.burst(player.x, player.y, [0xff3495, 0xffffff, 0xff3495])
+      fx.float(`+${gained}`, player.x, player.y)
     }
 
     // 8) Счёт (высота в метрах)
@@ -375,9 +389,21 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     const heightMeters = -minY / balance.score.pxPerMeter
     hud.text = `${Math.floor(heightMeters)}`
 
-    // 8b) Эпохи: смена фона + баннер перехода по высоте; параллакс-сцена фона
+    // 8a) Побитие рекорда — конфетти (один раз за партию; первые метры не празднуем)
+    if (
+      !recordCelebrated &&
+      bestHeight >= balance.particles.recordMinMeters &&
+      heightMeters > bestHeight
+    ) {
+      recordCelebrated = true
+      screenFx.confetti(w)
+    }
+
+    // 8b) Эпохи: смена фона + баннер перехода по высоте; параллакс-сцена фона; частицы
     epochs.update(heightMeters, dtSec)
     background.update(dtSec, cameraOffset, epochs.current)
+    fx.update(dtSec)
+    screenFx.update(dtSec)
 
     // 9) HUD-карточка (вариант B): раскладка контента → размер карточки → фон/маска →
     // полоска прогресса эпохи нижней кромкой во всю ширину. Баннер — по центру.

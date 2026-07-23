@@ -89,6 +89,13 @@
   "hud": {
     "epochBar": { "widthPx": 104, "heightPx": 4, "gapY": 10 }
   },
+  "particles": {
+    "crystal": { "count": 8, "speed": 170, "lifeSec": 0.45 },
+    "ring": { "lifeSec": 0.5 },
+    "confetti": { "count": 36, "lifeSec": 1.8 },
+    "floatSec": 0.7,
+    "recordMinMeters": 10
+  },
   "epochTransition": { "crossfadeSec": 1.5, "bannerSec": 2.2 },
   "epochs": [
     { "id": 1, "name": "2G", "fromMeters": 0, "toMeters": 500, "bg": "#000000", "banner": "2G. Погнали" },
