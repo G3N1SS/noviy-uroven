@@ -202,6 +202,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
 
   // --- состояние партии ---
   let cameraOffset = 0
+  let lastScreenH = app.screen.height // для переякоривания камеры при ресайзе вьюпорта
   let minY = 0 // самая большая высота (наименьший y) за партию — для счёта
   let crystalsThisRun = 0 // кристаллы, собранные ЗА ТЕКУЩУЮ партию (для экрана Game Over)
   // Кошелёк и рекорд переживают перезагрузку (localStorage; полноценный IndexedDB — Этап 5).
@@ -287,6 +288,15 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   const simulate = () => {
     const w = app.screen.width
     const h = app.screen.height
+
+    // 0) Ресайз вьюпорта (моб. адресная строка появляется/скрывается, поворот): переякориваем
+    //    камеру, чтобы игрок остался на followRatio. Иначе cameraOffset выставлен под старую
+    //    высоту, и при уменьшении h игрок оказывается за нижним краем → мгновенная смерть (баг).
+    if (h !== lastScreenH) {
+      cameraOffset = h * balance.camera.followRatio - player.y
+      world.y = cameraOffset
+      lastScreenH = h
+    }
 
     // 1) Ввод → горизонтальная скорость. Приоритет: клавиши (dev) → активная схема.
     //    null от контроллера = ввода нет → инерция. При потере контроля (помеха) — только инерция.
