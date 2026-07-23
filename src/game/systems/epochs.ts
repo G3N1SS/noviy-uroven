@@ -72,6 +72,18 @@ export class EpochManager {
     }
   }
 
+  /**
+   * Прогресс внутри текущей эпохи, 0..1 — для полоски в HUD (конспект 3.5).
+   * null — финальная эпоха (следующей нет, полоску не показываем).
+   */
+  progress(heightMeters: number): number | null {
+    const e = this.epochFor(heightMeters)
+    if (e.toMeters === null) return null
+    const span = e.toMeters - e.fromMeters
+    if (span <= 0) return null
+    return Math.min(1, Math.max(0, (heightMeters - e.fromMeters) / span))
+  }
+
   /** Дерзкий нарратив для экрана Game Over по достигнутой высоте (конспект 2.13). */
   deathBanner(heightMeters: number): string {
     const e = this.epochFor(heightMeters)

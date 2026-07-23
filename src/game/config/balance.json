@@ -86,6 +86,9 @@
   "background": {
     "parallax": { "far": 0.2, "mid": 0.5, "near": 0.8 }
   },
+  "hud": {
+    "epochBar": { "widthPx": 104, "heightPx": 4, "gapY": 10 }
+  },
   "epochTransition": { "crossfadeSec": 1.5, "bannerSec": 2.2 },
   "epochs": [
     { "id": 1, "name": "2G", "fromMeters": 0, "toMeters": 500, "bg": "#000000", "banner": "2G. Погнали" },

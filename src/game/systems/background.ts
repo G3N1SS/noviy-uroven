@@ -182,10 +182,11 @@ function buildScene(epochId: number, w: number, h: number): Scene {
   switch (epochId) {
     // ---- 1: 2G — столбы и провода ----
     case 1: {
-      // 3 слоя «пыли эфира» — параллакс чувствуется даже на статичном плакате
-      addLayer(P.far, 0, dots(12, w, h, 0xffffff, 0.03, 0.06)) // VHS-зерно
-      addLayer(P.mid, 0, dots(7, w, h, 0xffffff, 0.05, 0.08, 0.9, 1.4))
-      addLayer(P.near, 0, dots(5, w, h, 0xffffff, 0.07, 0.1, 1.2, 1.8))
+      // 3 слоя пыли эфира — единственное, что параллаксит (образ-плакат статичен).
+      // Альфы подняты: на 0.03–0.06 пыль не читалась и параллакса не было видно.
+      addLayer(P.far, 0, dots(16, w, h, 0xffffff, 0.12, 0.2))
+      addLayer(P.mid, 0, dots(10, w, h, 0xffffff, 0.18, 0.28, 0.9, 1.4))
+      addLayer(P.near, 0, dots(6, w, h, 0xffffff, 0.26, 0.38, 1.2, 1.9))
       // здания по краям
       bd.rect(0, h * 0.62, w * 0.2, h * 0.38).fill({ color: 0x1a1a1a, alpha: 0.22 })
       bd.rect(w * 0.79, h * 0.58, w * 0.21, h * 0.42).fill({ color: 0x1a1a1a, alpha: 0.22 })

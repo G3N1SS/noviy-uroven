@@ -127,29 +127,35 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   window.addEventListener('keydown', onKeyDown)
   window.addEventListener('keyup', onKeyUp)
 
-  // HUD (вариант A): слева-сверху высота (стенсил-цифры — фишка T2) + «м» мельче,
-  // под ней кристаллы (ромб + число). Правый верхний угол — только кнопка паузы (DOM).
+  // HUD (вариант B — бенто-карточка): слева-сверху одна карточка с тонкой рамкой:
+  // высота (стенсил — фишка T2), кристаллы, а полоска прогресса эпохи — НИЖНЯЯ КРОМКА
+  // карточки во всю ширину. Правый верхний угол — только кнопка паузы (DOM, призрак в тон).
   const STENCIL = 'Big Shoulders Stencil, Manrope, sans-serif'
+  const hudCard = new Container()
+  hudCard.x = 10
+  hudCard.y = 10
+  const cardBg = new Graphics()
+  const cardMask = new Graphics()
+  hudCard.addChild(cardBg, cardMask)
+  hudCard.mask = cardMask // полоска-кромка клипается скруглениями карточки
+
   const hud = new Text({
     text: '0',
-    style: { fill: 0xffffff, fontFamily: STENCIL, fontSize: 44, fontWeight: '700' },
+    style: { fill: 0xffffff, fontFamily: STENCIL, fontSize: 38, fontWeight: '700' },
   })
-  hud.x = 16
-  hud.y = 8
   const hudUnit = new Text({
     text: 'м',
-    style: { fill: 0xffffff, fontFamily: STENCIL, fontSize: 21, fontWeight: '700' },
+    style: { fill: 0xffffff, fontFamily: STENCIL, fontSize: 19, fontWeight: '700' },
   })
-  app.stage.addChild(hud, hudUnit)
-
-  // Кристаллы — под высотой: ромб-иконка + число, оба прижаты влево.
   const crystalIcon = new Graphics()
-  drawCrystal({ view: crystalIcon, x: 0, y: 0, value: 0, radius: 8, active: true }, false)
+  drawCrystal({ view: crystalIcon, x: 0, y: 0, value: 0, radius: 7, active: true }, false)
   const crystalHud = new Text({
     text: '0',
-    style: { fill: 0xffffff, fontFamily: 'Manrope, sans-serif', fontSize: 18, fontWeight: '800' },
+    style: { fill: 0xffffff, fontFamily: 'Manrope, sans-serif', fontSize: 15, fontWeight: '800' },
   })
-  app.stage.addChild(crystalIcon, crystalHud)
+  const epochBar = new Graphics() // прогресс эпохи — нижняя кромка карточки
+  hudCard.addChild(hud, hudUnit, crystalIcon, crystalHud, epochBar)
+  app.stage.addChild(hudCard)
 
   // Canvas/Pixi НЕ триггерит подгрузку @font-face (в отличие от DOM), поэтому шрифты
   // грузим явно, затем перерисовываем HUD-тексты (иначе «м»/«0» застынут в fallback).
@@ -373,14 +379,35 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     epochs.update(heightMeters, dtSec)
     background.update(dtSec, cameraOffset, epochs.current)
 
-    // 9) HUD-позиции (вариант A): слева высота + «м» у baseline, ниже кристаллы; баннер центр
-    hudUnit.x = hud.x + hud.width + 5
+    // 9) HUD-карточка (вариант B): раскладка контента → размер карточки → фон/маска →
+    // полоска прогресса эпохи нижней кромкой во всю ширину. Баннер — по центру.
+    const padX = 12
+    hud.x = padX
+    hud.y = 6
+    hudUnit.x = hud.x + hud.width + 4
     hudUnit.y = hud.y + hud.height - hudUnit.height - 3 // прижать к низу цифр
-    const rowY = hud.y + hud.height + 6
-    crystalIcon.x = 16 + 8
-    crystalIcon.y = rowY + 9
-    crystalHud.x = 16 + 20
+    const rowY = hud.y + hud.height + 5
+    crystalIcon.x = padX + 7
+    crystalIcon.y = rowY + 8
+    crystalHud.x = padX + 18
     crystalHud.y = rowY
+    const eb = balance.hud.epochBar
+    const cardW = Math.max(hudUnit.x + hudUnit.width, 96) + padX
+    const cardH = rowY + crystalHud.height + 8 + eb.heightPx
+    cardBg.clear()
+    cardBg.roundRect(0, 0, cardW, cardH, 14).fill({ color: 0xffffff, alpha: 0.04 })
+    cardBg.roundRect(0, 0, cardW, cardH, 14).stroke({ color: 0xffffff, alpha: 0.12, width: 1 })
+    cardMask.clear().roundRect(0, 0, cardW, cardH, 14).fill(0xffffff)
+    // прогресс эпохи — кромка. null = финальная эпоха: кромку не рисуем.
+    const prog = epochs.progress(heightMeters)
+    epochBar.clear()
+    if (prog !== null) {
+      const by = cardH - eb.heightPx
+      epochBar.rect(0, by, cardW, eb.heightPx).fill({ color: 0xffffff, alpha: 0.12 })
+      if (prog > 0) {
+        epochBar.rect(0, by, cardW * prog, eb.heightPx).fill({ color: 0xff3495 })
+      }
+    }
     banner.x = w / 2
     banner.y = h * 0.26
 
