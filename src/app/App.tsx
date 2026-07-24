@@ -1,10 +1,11 @@
 import { GameCanvas } from '../game/engine/GameCanvas'
 import { MainMenu } from '../features/menu/MainMenu'
 import { Onboarding } from '../features/onboarding/Onboarding'
+import { Settings } from '../features/settings/Settings'
 import { useUi } from '../shared/store/ui'
 
 // React отвечает за оболочку и роутинг экранов. Игровой мир целиком рендерит PixiJS
-// внутри GameCanvas (без re-render на кадр). Экраны (онбординг, меню) — DOM-оверлеи поверх.
+// внутри GameCanvas (без re-render на кадр). Экраны (онбординг, меню, настройки) — DOM поверх.
 export function App() {
   const screen = useUi((s) => s.screen)
   return (
@@ -12,6 +13,7 @@ export function App() {
       <GameCanvas />
       {screen === 'onboarding' && <Onboarding />}
       {screen === 'menu' && <MainMenu />}
+      {screen === 'settings' && <Settings />}
     </>
   )
 }

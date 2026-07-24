@@ -1,4 +1,5 @@
 import { balance } from '../config/balance'
+import { getControlSensitivity } from '../../shared/storage/local'
 import type { Controller } from './types'
 
 /** iOS 13+ прячет requestPermission на конструкторе DeviceOrientationEvent. */
@@ -17,9 +18,17 @@ export class TiltController implements Controller {
   private gamma: number | null = null
   private gamma0 = 0
   private hasData = false
+  private fullSpeedDeg: number
 
   constructor() {
+    this.fullSpeedDeg = this.computeFullSpeed()
     window.addEventListener('deviceorientation', this.onOrient)
+  }
+
+  /** Угол полной скорости из чувствительности 0..1: 0 → low (спокойнее), 1 → high (резче). */
+  private computeFullSpeed(): number {
+    const s = balance.controls.tilt.sensitivity
+    return s.low + (s.high - s.low) * getControlSensitivity('tilt')
   }
 
   private onOrient = (e: DeviceOrientationEvent) => {
@@ -29,18 +38,19 @@ export class TiltController implements Controller {
     }
   }
 
-  /** Калибровка нуля: текущий наклон считаем нейтральным. */
+  /** Старт партии: калибровка нуля + перечитываем чувствительность (могли поменять в настройках). */
   reset() {
+    this.fullSpeedDeg = this.computeFullSpeed()
     if (this.gamma !== null) this.gamma0 = this.gamma
   }
 
   update(_playerX: number, _screenW: number, maxSpeed: number): number | null {
     if (!this.hasData || this.gamma === null) return null
-    const { deadZoneDeg, fullSpeedDeg } = balance.controls.tilt
+    const { deadZoneDeg } = balance.controls.tilt
     const g = this.gamma - this.gamma0
     const mag = Math.abs(g)
     if (mag <= deadZoneDeg) return 0
-    const t = Math.min((mag - deadZoneDeg) / (fullSpeedDeg - deadZoneDeg), 1)
+    const t = Math.min((mag - deadZoneDeg) / (this.fullSpeedDeg - deadZoneDeg), 1)
     return Math.sign(g) * t * maxSpeed
   }
 

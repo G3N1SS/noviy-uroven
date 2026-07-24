@@ -109,7 +109,9 @@
       "deadZoneDeg": 3,
       "fullSpeedDeg": 30,
       "sensitivity": { "low": 45, "medium": 30, "high": 20 }
-    }
+    },
+    "follow": { "gainMin": 14, "gainMax": 34 },
+    "zones": { "speedFactorMin": 0.6, "speedFactorMax": 1.0 }
   },
   "economy": {
     "rewards": [

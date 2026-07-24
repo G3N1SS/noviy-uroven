@@ -14,14 +14,15 @@ export interface GameControls {
   currentControl: () => ControlMode
 }
 
-export type Screen = 'onboarding' | 'menu' | 'playing'
+export type Screen = 'onboarding' | 'menu' | 'settings' | 'playing'
 
 interface UiState {
   screen: Screen
-  /** true до первого старта игры → меню играет полную интро-хореографию (иначе лёгкий фейд). */
-  firstMenu: boolean
+  /** Интро меню (полная хореография) проигрывается один раз; дальше — лёгкий фейд. */
+  menuIntroDone: boolean
   controls: GameControls | null
   registerGame: (c: GameControls) => void
+  markMenuIntroDone: () => void
   /** Онбординг: выбрать управление → в меню. Промис false = iOS отклонил доступ к наклону. */
   chooseControl: (mode: ControlMode) => Promise<boolean>
   /** Меню → игра: стартуем свежую партию (мгновенно, без анимации). */
@@ -32,6 +33,9 @@ interface UiState {
   enterGame: () => void
   /** Пауза/Game Over → меню. */
   openMenu: () => void
+  /** Меню → настройки и обратно. */
+  openSettings: () => void
+  closeSettings: () => void
 }
 
 /**
@@ -42,9 +46,10 @@ interface UiState {
 export const useUi = create<UiState>((set, get) => ({
   // Первый запуск без выбранного управления → сразу онбординг (ТЗ 3.5), иначе меню.
   screen: hasChosenControl() ? 'menu' : 'onboarding',
-  firstMenu: true,
+  menuIntroDone: false,
   controls: null,
   registerGame: (controls) => set({ controls }),
+  markMenuIntroDone: () => set({ menuIntroDone: true }),
   chooseControl: async (mode) => {
     const ok = (await get().controls?.setControl(mode)) ?? false
     if (ok) set({ screen: 'menu' })
@@ -52,17 +57,16 @@ export const useUi = create<UiState>((set, get) => ({
   },
   play: () => {
     get().controls?.start()
-    set({ screen: 'playing', firstMenu: false })
+    set({ screen: 'playing' })
   },
-  beginGame: () => {
-    get().controls?.start()
-    set({ firstMenu: false })
-  },
+  beginGame: () => get().controls?.start(),
   enterGame: () => set({ screen: 'playing' }),
   openMenu: () => {
     get().controls?.toMenu()
     set({ screen: 'menu' })
   },
+  openSettings: () => set({ screen: 'settings' }),
+  closeSettings: () => set({ screen: 'menu' }),
 }))
 
 if (import.meta.env.DEV) (window as unknown as { __ui: typeof useUi }).__ui = useUi

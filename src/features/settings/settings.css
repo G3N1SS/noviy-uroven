@@ -1,0 +1,196 @@
+/**
+ * Экран настроек (Этап 3, вариант A «бенто-карточки»). Блок `set` по БЭМ.
+ * Управление (пилюли + чувствительность наклона) — рабочее сразу. Тумблеры звука —
+ * задел под Этап 4 (сохраняют состояние, аудио-слоя пока нет). Цвета — токены :root.
+ */
+
+.set {
+  position: fixed;
+  inset: 0;
+  z-index: 32;
+  display: flex;
+  flex-direction: column;
+  padding: calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: var(--t2-black);
+  font-family: 'Manrope', system-ui, sans-serif;
+  overflow-y: auto;
+  animation: set-in 0.28s ease both;
+}
+
+@keyframes set-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.set__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.set__back {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--t2-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease;
+}
+.set__back:active {
+  transform: scale(0.94);
+}
+
+.set__title {
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--t2-white);
+  margin: 0;
+}
+
+.set__card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.set__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 10px;
+}
+
+.set__pills {
+  display: flex;
+  gap: 6px;
+}
+
+.set__pill {
+  flex: 1;
+  padding: 11px 0;
+  text-align: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--t2-white);
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease,
+    transform 0.1s ease;
+}
+.set__pill:active {
+  transform: scale(0.97);
+}
+.set__pill--active {
+  background: var(--t2-magenta);
+  border-color: var(--t2-magenta);
+  color: var(--t2-black);
+}
+
+.set__sens {
+  margin-top: 14px;
+}
+
+.set__range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.16);
+  outline: none;
+  margin: 4px 0;
+}
+.set__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--t2-white);
+  cursor: pointer;
+  border: none;
+}
+.set__range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: var(--t2-white);
+  cursor: pointer;
+}
+
+.set__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.set__row:last-child {
+  border-bottom: none;
+}
+
+.set__row-label {
+  color: var(--t2-white);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.set__switch {
+  width: 44px;
+  height: 26px;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s ease;
+}
+.set__switch--on {
+  background: var(--t2-magenta);
+}
+.set__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--t2-white);
+  transition: transform 0.18s cubic-bezier(0.34, 1.3, 0.5, 1);
+}
+.set__switch--on .set__knob {
+  transform: translateX(18px);
+}
+
+.set__note {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 2px 2px 0;
+}

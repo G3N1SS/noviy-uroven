@@ -1,25 +1,47 @@
 import { balance } from '../config/balance'
+import { getControlSensitivity } from '../../shared/storage/local'
 import type { Controller, ControlMode } from './types'
 
 /**
  * Тач/мышь. Два варианта (конспект 2.4):
  *  - 'follow': персонаж плавно едет к X пальца (следование, не телепорт)
  *  - 'zones':  левая половина экрана = влево, правая = вправо
+ * Чувствительность (0..1, своя на режим): follow → gain следования, zones → множитель
+ * скорости толчка. Перечитывается на reset() (старт партии), как и калибровка наклона.
  */
 export class TouchController implements Controller {
   readonly mode: ControlMode
   private pointerX: number | null = null
   private down = false
+  private gain = balance.controls.follow.gainMax
+  private zoneFactor = 1
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
     variant: 'follow' | 'zones',
   ) {
     this.mode = variant
+    this.applySensitivity()
     canvas.addEventListener('pointerdown', this.onDown)
     window.addEventListener('pointermove', this.onMove)
     window.addEventListener('pointerup', this.onUp)
     window.addEventListener('pointercancel', this.onUp)
+  }
+
+  private applySensitivity(): void {
+    const s = getControlSensitivity(this.mode) // 0..1
+    if (this.mode === 'follow') {
+      const f = balance.controls.follow
+      this.gain = f.gainMin + (f.gainMax - f.gainMin) * s
+    } else {
+      const z = balance.controls.zones
+      this.zoneFactor = z.speedFactorMin + (z.speedFactorMax - z.speedFactorMin) * s
+    }
+  }
+
+  /** Старт партии: перечитываем чувствительность (могли поменять в настройках). */
+  reset(): void {
+    this.applySensitivity()
   }
 
   private toCanvasX(clientX: number): number {
@@ -41,10 +63,11 @@ export class TouchController implements Controller {
   update(playerX: number, screenW: number, maxSpeed: number): number | null {
     if (!this.down || this.pointerX === null) return null
     if (this.mode === 'zones') {
-      return this.pointerX < screenW / 2 ? -maxSpeed : maxSpeed
+      const dir = this.pointerX < screenW / 2 ? -1 : 1
+      return dir * maxSpeed * this.zoneFactor
     }
     // follow (vx в px/сек)
-    const vx = (this.pointerX - playerX) * balance.input.followGainPerSec
+    const vx = (this.pointerX - playerX) * this.gain
     return Math.max(-maxSpeed, Math.min(maxSpeed, vx))
   }
 
