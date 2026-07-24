@@ -1,0 +1,62 @@
+/**
+ * Блок `toast` — уведомление о новой версии (БЭМ). Цвета из токенов :root.
+ * Живёт внизу экрана, поверх всего, но не перекрывает игру целиком.
+ */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 140%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(420px, calc(100vw - 32px));
+  padding: 14px 16px;
+  background: var(--surface-1);
+  border: 1px solid var(--surface-2);
+  border-radius: 18px;
+  font-family: 'Manrope', system-ui, sans-serif;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.28s ease,
+    opacity 0.28s ease;
+}
+
+.toast--open {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.toast__text {
+  flex: 1;
+  color: var(--t2-white);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.toast__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.toast__btn {
+  padding: 9px 14px;
+  border: 1px solid var(--surface-2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--t2-white);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.toast__btn--primary {
+  background: var(--t2-magenta);
+  border-color: var(--t2-magenta);
+  color: var(--t2-black);
+}

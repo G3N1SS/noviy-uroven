@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import './mainMenu.css'
 import { useUi } from '../../shared/store/ui'
 import { getBestHeight, getCrystalTotal } from '../../shared/storage/local'
+import { onInstallAvailability, promptInstall } from '../../pwa/install'
 
 /**
  * Главное меню (Этап 3, вариант H). Показывается на старте и по выходу из игры.
@@ -39,6 +40,10 @@ export function MainMenu() {
     useUi.getState().menuIntroDone ? 'enter' : 'intro',
   )
   const hintTimer = useRef<number>()
+  // Кнопка установки — только если браузер реально готов установить (Chrome/Android
+  // прислал beforeinstallprompt). На iOS события нет → кнопки нет, вместо вранья молчим.
+  const [canInstall, setCanInstall] = useState(false)
+  useEffect(() => onInstallAvailability(setCanInstall), [])
 
   // Снимаем класс входа после проигрыша — чтобы `animation` не конфликтовал с
   // transition'ами запуска (PLAY трогают обе фазы). После интро помечаем его сыгранным.
@@ -156,6 +161,12 @@ export function MainMenu() {
           </button>
         ))}
       </nav>
+
+      {canInstall && (
+        <button className="menu__install" onClick={() => void promptInstall()}>
+          Поставить на домашний экран
+        </button>
+      )}
 
       <div className={`menu__hint${hint ? ' menu__hint--show' : ''}`}>{hint}</div>
 

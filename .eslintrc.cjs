@@ -12,5 +12,10 @@ module.exports = {
   ignorePatterns: ['dist', 'node_modules', '.eslintrc.cjs'],
   rules: {
     'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    // Подчёркивание = «знаю, что не использую» (обязательный параметр интерфейса).
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    // Ведущая `;` перед `(window as ...)` — стиль Prettier для ASI, не лишняя точка с запятой.
+    'no-extra-semi': 'off',
+    '@typescript-eslint/no-extra-semi': 'off',
   },
 }
