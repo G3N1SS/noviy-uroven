@@ -13,6 +13,7 @@ import {
   setControlSensitivity,
 } from '../../shared/storage/local'
 import { audio } from '../../shared/audio/audioManager'
+import { haptics } from '../../shared/audio/haptics'
 
 /**
  * Экран настроек (ТЗ 3.5, вариант A). Управление (пилюли + чувствительность наклона) —
@@ -141,7 +142,20 @@ export function Settings() {
         </div>
         <div className="set__row">
           <span className="set__row-label">Вибрация</span>
-          <Switch on={vibro} onToggle={() => toggle(vibro, setVibroS, setVibro, true)} />
+          <Switch
+            on={vibro}
+            onToggle={() =>
+              toggle(
+                vibro,
+                setVibroS,
+                (v) => {
+                  setVibro(v)
+                  haptics.setEnabled(v) // живое применение
+                },
+                true,
+              )
+            }
+          />
         </div>
       </div>
 

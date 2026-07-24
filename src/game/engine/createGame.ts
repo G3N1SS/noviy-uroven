@@ -17,6 +17,7 @@ import { createPauseMenu } from '../controls/pauseMenu'
 import { createGameOver } from '../../features/gameOver/gameOver'
 import { getBestHeight, setBestHeight, getCrystalTotal, setCrystalTotal } from '../../shared/storage/local'
 import { audio } from '../../shared/audio/audioManager'
+import { haptics } from '../../shared/audio/haptics'
 
 export interface GameHandle {
   app: Application
@@ -289,6 +290,7 @@ export async function createGame(
   function die() {
     app.ticker.stop()
     audio.death()
+    haptics.heavy()
     const heightMeters = Math.floor(-minY / balance.score.pxPerMeter)
     const beaten = heightMeters > bestHeight
     if (beaten) {
@@ -371,6 +373,7 @@ export async function createGame(
             p.collapseTimer = balance.platforms.types.rrl.collapseMs / 1000 // старт разрушения
             audio.jumpRrl() // отскок
             audio.shatter() // крошево (визуальный распад начинается тут же)
+            haptics.hit()
           } else {
             audio.jumpVols() // ВОЛС/движущаяся — мягкий блип
             p.bounceT = 0 // landing-bounce (пружина проседания)
@@ -385,6 +388,7 @@ export async function createGame(
       player.vy = balance.obstacles.interference.knockbackVy
       controlLockSec = balance.obstacles.interference.controlLockSec
       audio.glitch()
+      haptics.hit()
     }
 
     // 5) Камера — только вверх
@@ -403,6 +407,7 @@ export async function createGame(
       fx.ring(player.x, player.y, boosterColor(type))
       // оттенок звука под тип: Гигабэк выше/ярче, MiXX-щит тёплый, SafeWall — средний
       audio.booster(type === 'gigaback' ? 300 : type === 'safewall' ? 240 : 200)
+      haptics.hit()
       if (type === 'gigaback') {
         gigabackSec = balance.boosters.gigaback.durationMs / 1000
       } else if (type === 'mixxShield') {
@@ -430,6 +435,7 @@ export async function createGame(
       fx.burst(player.x, player.y, [0xff3495, 0xffffff, 0xff3495])
       fx.float(`+${gained}`, player.x, player.y)
       audio.crystal(crystalCombo) // высота растёт по цепочке
+      haptics.tap()
       crystalCombo = Math.min(crystalCombo + got, 12)
       crystalComboCd = 0.55
     }
@@ -452,7 +458,10 @@ export async function createGame(
     // 8b) Эпохи: смена фона + баннер перехода по высоте; параллакс-сцена фона; частицы
     const prevEpoch = epochs.current
     epochs.update(heightMeters, dtSec)
-    if (epochs.current > prevEpoch && prevEpoch > 0) audio.epochChord(epochs.current) // «вау» перехода (не на старте)
+    if (epochs.current > prevEpoch && prevEpoch > 0) {
+      audio.epochChord(epochs.current) // «вау» перехода (не на старте)
+      haptics.heavy()
+    }
     background.update(dtSec, cameraOffset, epochs.current)
     fx.update(dtSec)
     screenFx.update(dtSec)
@@ -559,6 +568,7 @@ export async function createGame(
         player.vy = -jumpVel * balance.boosters.rescueBounceFactor // мощный отскок вверх
         controlLockSec = 0
         audio.rescue()
+        haptics.hit()
       } else {
         die()
       }
