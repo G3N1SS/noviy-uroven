@@ -187,9 +187,11 @@ function buildScene(epochId: number, w: number, h: number): Scene {
       addLayer(P.far, 0, dots(16, w, h, 0xffffff, 0.12, 0.2))
       addLayer(P.mid, 0, dots(10, w, h, 0xffffff, 0.18, 0.28, 0.9, 1.4))
       addLayer(P.near, 0, dots(6, w, h, 0xffffff, 0.26, 0.38, 1.2, 1.9))
-      // здания по краям
-      bd.rect(0, h * 0.62, w * 0.2, h * 0.38).fill({ color: 0x1a1a1a, alpha: 0.22 })
-      bd.rect(w * 0.79, h * 0.58, w * 0.21, h * 0.42).fill({ color: 0x1a1a1a, alpha: 0.22 })
+      // свечение улицы у горизонта (плакатная глубина; палитра A — 2G остаётся чёрным)
+      bd.ellipse(w / 2, h + h * 0.06, w * 0.85, h * 0.16).fill({ color: 0xff3495, alpha: 0.04 })
+      // здания по краям (плотные силуэты; на 0.22 сквозили и читались как стекло)
+      bd.rect(0, h * 0.62, w * 0.2, h * 0.38).fill({ color: 0x161616, alpha: 0.85 })
+      bd.rect(w * 0.79, h * 0.58, w * 0.21, h * 0.42).fill({ color: 0x161616, alpha: 0.85 })
       // окна на зданиях (тёплые, статичные)
       for (const [wx, wy] of [
         [w * 0.05, h * 0.68],
@@ -234,12 +236,14 @@ function buildScene(epochId: number, w: number, h: number): Scene {
       addLayer(P.mid, 0, dots(6, w, h, 0x1f3fff, 0.2, 0.45, 1.2, 1.8, true))
       addLayer(P.near, 0, dots(4, w, h, 0xffffff, 0.12, 0.2, 1.4, 2))
       const rY = h * 0.85
-      // парапет со ступенями
+      // свечение города за парапетом (электрик, палитра A — небо #04101e)
+      bd.ellipse(w / 2, h + h * 0.04, w * 0.9, h * 0.2).fill({ color: 0x1f3fff, alpha: 0.05 })
+      // парапет со ступенями (тон поднят: на синем небе 0x0a141f сливался)
       bd.moveTo(0, rY)
         .lineTo(w * 0.22, rY).lineTo(w * 0.22, rY - 12).lineTo(w * 0.34, rY - 12).lineTo(w * 0.34, rY)
         .lineTo(w * 0.6, rY).lineTo(w * 0.6, rY - 8).lineTo(w * 0.9, rY - 8).lineTo(w * 0.9, rY)
         .lineTo(w, rY).lineTo(w, h).lineTo(0, h).closePath()
-        .fill(0x0a141f)
+        .fill(0x0d1c2e)
       // окна на парапете
       bd.rect(w * 0.12, rY + 14, 3, 3).fill({ color: 0x1f3fff, alpha: 0.5 })
       bd.rect(w * 0.42, rY + 20, 3, 3).fill({ color: 0x1f3fff, alpha: 0.35 })
@@ -248,8 +252,8 @@ function buildScene(epochId: number, w: number, h: number): Scene {
       const mx = w * 0.76
       const mTop = h * 0.5
       const legBottomY = rY - 8
-      bd.moveTo(mx - 8, legBottomY).lineTo(mx - 2, mTop).stroke({ color: 0x101d2c, width: 2.2 })
-      bd.moveTo(mx + 8, legBottomY).lineTo(mx + 2, mTop).stroke({ color: 0x101d2c, width: 2.2 })
+      bd.moveTo(mx - 8, legBottomY).lineTo(mx - 2, mTop).stroke({ color: 0x16283c, width: 2.2 })
+      bd.moveTo(mx + 8, legBottomY).lineTo(mx + 2, mTop).stroke({ color: 0x16283c, width: 2.2 })
       const segs = 7
       for (let i = 0; i < segs; i++) {
         const t0 = i / segs
@@ -260,9 +264,9 @@ function buildScene(epochId: number, w: number, h: number): Scene {
         const half1 = 8 - 6 * t1
         const from = i % 2 === 0 ? mx - half0 : mx + half0
         const to = i % 2 === 0 ? mx + half1 : mx - half1
-        bd.moveTo(from, y0).lineTo(to, y1).stroke({ color: 0x101d2c, width: 1.6 })
+        bd.moveTo(from, y0).lineTo(to, y1).stroke({ color: 0x16283c, width: 1.6 })
       }
-      bd.moveTo(mx, mTop).lineTo(mx, mTop - 14).stroke({ color: 0x101d2c, width: 2.6 })
+      bd.moveTo(mx, mTop).lineTo(mx, mTop - 14).stroke({ color: 0x16283c, width: 2.6 })
       scene.root.addChild(bd)
       // маячок на мачте
       blinkG(scene, scene.root, (g) => g.circle(mx, mTop - 18, 3).fill(0x1f3fff), 0.65, 0.35, 1.6)
