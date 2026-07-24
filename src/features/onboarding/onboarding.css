@@ -1,0 +1,144 @@
+/**
+ * Онбординг выбора управления (Этап 3, ТЗ 3.5): один экран «Как удобнее играть?» → 2 карточки.
+ * Блок `onb` по БЭМ. Показывается один раз на первом запуске (нет сохранённого выбора).
+ * Цвета — токены :root. Лёгкая интро-анимация появления.
+ */
+
+.onb {
+  position: fixed;
+  inset: 0;
+  z-index: 32;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px calc(18px + env(safe-area-inset-left)) calc(24px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: var(--t2-black);
+  font-family: 'Manrope', system-ui, sans-serif;
+  text-align: center;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.onb__title {
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.1;
+  color: var(--t2-white);
+  margin: 0;
+  animation: onb-fade 0.5s ease 0.05s both;
+}
+
+.onb__sub {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 10px 0 28px;
+  animation: onb-fade 0.5s ease 0.15s both;
+}
+
+.onb__cards {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.onb__card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 14px;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--t2-white);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.14s ease,
+    border-color 0.14s ease,
+    background 0.14s ease;
+  animation: onb-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.onb__card:nth-child(1) {
+  animation-delay: 0.24s;
+}
+.onb__card:nth-child(2) {
+  animation-delay: 0.32s;
+}
+
+.onb__card:active {
+  transform: scale(0.97);
+}
+
+.onb__card:hover {
+  border-color: var(--t2-magenta);
+  background: rgba(255, 52, 149, 0.06);
+}
+
+.onb__card--busy {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.onb__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(255, 52, 149, 0.12);
+  color: var(--t2-magenta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onb__card-label {
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.onb__card-desc {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.onb__hint {
+  min-height: 18px;
+  margin-top: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--t2-magenta);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.onb__hint--show {
+  opacity: 1;
+}
+
+@keyframes onb-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes onb-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

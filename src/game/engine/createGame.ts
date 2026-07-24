@@ -12,6 +12,7 @@ import { ParticleFx } from '../systems/particles'
 import { drawCrystal } from '../entities/crystal'
 import { boosterColor } from '../entities/booster'
 import { ControlsManager } from '../controls/controlsManager'
+import type { ControlMode } from '../controls/types'
 import { createPauseMenu } from '../controls/pauseMenu'
 import { createGameOver } from '../../features/gameOver/gameOver'
 import { getBestHeight, setBestHeight, getCrystalTotal, setCrystalTotal } from '../../shared/storage/local'
@@ -23,6 +24,10 @@ export interface GameHandle {
   start: () => void
   /** Уход в меню: остановить тикер (мир замирает под оверлеем меню). */
   toMenu: () => void
+  /** Выбор управления (онбординг/настройки). Промис false, если iOS отклонил доступ к наклону. */
+  setControl: (mode: ControlMode) => Promise<boolean>
+  /** Текущая схема управления. */
+  currentControl: () => ControlMode
   /** DEV-объект для отладки/тюнинга. GameCanvas вешает его на window.__game (только живой инстанс). */
   debug: unknown
 }
@@ -640,5 +645,13 @@ export async function createGame(
   }
   const toMenu = () => app.ticker.stop()
 
-  return { app, destroy, start, toMenu, debug }
+  return {
+    app,
+    destroy,
+    start,
+    toMenu,
+    setControl: (mode: ControlMode) => controls.setMode(mode),
+    currentControl: () => controls.current,
+    debug,
+  }
 }

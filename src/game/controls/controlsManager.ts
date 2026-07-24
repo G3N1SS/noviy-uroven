@@ -10,6 +10,15 @@ function loadMode(): ControlMode {
   return v === 'tilt' || v === 'follow' || v === 'zones' ? v : DEFAULT_MODE
 }
 
+/** Сделал ли игрок явный выбор управления. false → показываем онбординг (ТЗ 3.5). */
+export function hasChosenControl(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null
+  } catch {
+    return false
+  }
+}
+
 /**
  * Держит активный контроллер, переключает схемы, сохраняет выбор в localStorage.
  * Для наклона на iOS запрашивает разрешение (setMode должен вызываться из тапа).
@@ -38,7 +47,10 @@ export class ControlsManager {
 
   /** Возвращает false, если пользователь отклонил разрешение на наклон (iOS). */
   async setMode(mode: ControlMode): Promise<boolean> {
-    if (mode === this._mode) return true
+    if (mode === this._mode) {
+      localStorage.setItem(STORAGE_KEY, mode) // персист даже если режим совпал (важно для онбординга)
+      return true
+    }
     if (mode === 'tilt' && TiltController.needsPermission()) {
       const granted = await TiltController.requestPermission()
       if (!granted) return false

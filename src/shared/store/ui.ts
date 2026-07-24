@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { hasChosenControl } from '../../game/controls/controlsManager'
+import type { ControlMode } from '../../game/controls/types'
 
 /** Императивные ручки управления игрой (регистрирует GameCanvas, когда движок готов). */
 export interface GameControls {
@@ -6,9 +8,13 @@ export interface GameControls {
   start: () => void
   /** Уйти в меню: остановить тикер (игра замирает под оверлеем меню). */
   toMenu: () => void
+  /** Выбрать схему управления (промис false = iOS отклонил доступ к наклону). */
+  setControl: (mode: ControlMode) => Promise<boolean>
+  /** Текущая схема управления. */
+  currentControl: () => ControlMode
 }
 
-export type Screen = 'menu' | 'playing'
+export type Screen = 'onboarding' | 'menu' | 'playing'
 
 interface UiState {
   screen: Screen
@@ -16,6 +22,8 @@ interface UiState {
   firstMenu: boolean
   controls: GameControls | null
   registerGame: (c: GameControls) => void
+  /** Онбординг: выбрать управление → в меню. Промис false = iOS отклонил доступ к наклону. */
+  chooseControl: (mode: ControlMode) => Promise<boolean>
   /** Меню → игра: стартуем свежую партию (мгновенно, без анимации). */
   play: () => void
   /** Прогруз, фаза 1: запускаем игру ПОД меню (экран ещё 'menu' → меню на месте для кросс-фейда). */
@@ -32,10 +40,16 @@ interface UiState {
  * (меню, пауза, game over) дёргают play()/openMenu().
  */
 export const useUi = create<UiState>((set, get) => ({
-  screen: 'menu',
+  // Первый запуск без выбранного управления → сразу онбординг (ТЗ 3.5), иначе меню.
+  screen: hasChosenControl() ? 'menu' : 'onboarding',
   firstMenu: true,
   controls: null,
   registerGame: (controls) => set({ controls }),
+  chooseControl: async (mode) => {
+    const ok = (await get().controls?.setControl(mode)) ?? false
+    if (ok) set({ screen: 'menu' })
+    return ok
+  },
   play: () => {
     get().controls?.start()
     set({ screen: 'playing', firstMenu: false })

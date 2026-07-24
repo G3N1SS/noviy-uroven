@@ -23,8 +23,13 @@ export function GameCanvas() {
         return
       }
       handle = h
-      // Мост React↔движок: экраны дёргают start()/toMenu() через стор.
-      useUi.getState().registerGame({ start: h.start, toMenu: h.toMenu })
+      // Мост React↔движок: экраны дёргают start()/toMenu()/setControl() через стор.
+      useUi.getState().registerGame({
+        start: h.start,
+        toMenu: h.toMenu,
+        setControl: h.setControl,
+        currentControl: h.currentControl,
+      })
       if (import.meta.env.DEV) Reflect.set(globalThis, '__game', h.debug)
     })
 
