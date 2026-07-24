@@ -1,0 +1,200 @@
+/**
+ * Экран правил (Этап 3, ТЗ 3.5). Блок `rules` по БЭМ. Дерзкий тон (2.13), коротко.
+ * Секции-бенто с глифами элементов игры (цвета из токенов). Прокручиваемый.
+ */
+
+.rules {
+  position: fixed;
+  inset: 0;
+  z-index: 32;
+  display: flex;
+  flex-direction: column;
+  padding: calc(14px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: var(--t2-black);
+  font-family: 'Manrope', system-ui, sans-serif;
+  overflow-y: auto;
+  animation: rules-in 0.28s ease both;
+}
+
+@keyframes rules-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rules__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rules__back {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--t2-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease;
+}
+.rules__back:active {
+  transform: scale(0.94);
+}
+
+.rules__title {
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--t2-white);
+  margin: 0;
+}
+
+/* Крупная строка-цель наверху */
+.rules__goal {
+  font-weight: 800;
+  font-size: 17px;
+  line-height: 1.35;
+  color: var(--t2-white);
+  margin: 0 2px 16px;
+}
+.rules__goal b {
+  color: var(--t2-magenta);
+}
+
+.rules__section {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 6px 14px;
+  margin-bottom: 12px;
+}
+
+.rules__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 10px 0 4px;
+}
+
+.rules__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.rules__row:last-child {
+  border-bottom: none;
+}
+
+.rules__glyph {
+  width: 40px;
+  height: 26px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rules__text {
+  min-width: 0;
+}
+.rules__row-title {
+  display: block;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--t2-white);
+}
+.rules__row-desc {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* --- Глифы элементов (процедурно, без ассетов) --- */
+.rules__bar {
+  width: 34px;
+  height: 8px;
+  border-radius: 3px;
+}
+.rules__bar--vols {
+  background: var(--t2-white);
+}
+.rules__bar--rrl {
+  background: transparent;
+  border: 1.5px dashed var(--t2-magenta);
+  height: 11px;
+}
+.rules__bar--moving {
+  background: var(--t2-white);
+  position: relative;
+}
+.rules__bar--moving::after {
+  content: '›';
+  position: absolute;
+  inset: 0;
+  color: var(--t2-black);
+  font-weight: 800;
+  font-size: 11px;
+  line-height: 8px;
+  text-align: center;
+}
+.rules__bar--fake {
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px dashed rgba(255, 255, 255, 0.5);
+}
+
+.rules__diamond {
+  width: 12px;
+  height: 12px;
+  transform: rotate(45deg);
+  background: var(--t2-magenta);
+}
+
+.rules__dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 10px;
+}
+.rules__dot--gigaback {
+  background: var(--t2-magenta);
+  color: var(--t2-black);
+}
+.rules__dot--shield {
+  border: 2px solid var(--t2-lime);
+}
+.rules__dot--safewall {
+  border: 2px solid var(--t2-electric);
+}
+
+.rules__glitch {
+  width: 22px;
+  height: 20px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--t2-magenta) 0 2px,
+    transparent 2px 5px
+  );
+  opacity: 0.85;
+}

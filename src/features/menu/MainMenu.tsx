@@ -30,6 +30,7 @@ export function MainMenu() {
   const [launching, setLaunching] = useState(false)
   const [handoff, setHandoff] = useState(false)
   const openSettings = useUi((s) => s.openSettings)
+  const openRules = useUi((s) => s.openRules)
   // Полная интро один раз (первый показ меню); возврат из игры/настроек → лёгкий фейд.
   // Флаг в сторе (переживает двойной монтаж StrictMode и remount при навигации).
   const [entrance, setEntrance] = useState<'intro' | 'enter' | null>(
@@ -115,7 +116,13 @@ export function MainMenu() {
             key={n.key}
             className="menu__nav-btn"
             aria-label={n.label}
-            onClick={() => (n.key === 'settings' ? openSettings() : soon(n.label))}
+            onClick={() =>
+              n.key === 'settings'
+                ? openSettings()
+                : n.key === 'help'
+                  ? openRules()
+                  : soon(n.label)
+            }
           >
             {n.key === 'settings' ? (
               <svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

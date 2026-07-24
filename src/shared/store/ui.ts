@@ -14,7 +14,7 @@ export interface GameControls {
   currentControl: () => ControlMode
 }
 
-export type Screen = 'onboarding' | 'menu' | 'settings' | 'playing'
+export type Screen = 'onboarding' | 'menu' | 'settings' | 'rules' | 'playing'
 
 interface UiState {
   screen: Screen
@@ -33,9 +33,10 @@ interface UiState {
   enterGame: () => void
   /** Пауза/Game Over → меню. */
   openMenu: () => void
-  /** Меню → настройки и обратно. */
+  /** Меню → под-экраны (настройки, правила) и обратно в меню. */
   openSettings: () => void
-  closeSettings: () => void
+  openRules: () => void
+  backToMenu: () => void
 }
 
 /**
@@ -66,7 +67,8 @@ export const useUi = create<UiState>((set, get) => ({
     set({ screen: 'menu' })
   },
   openSettings: () => set({ screen: 'settings' }),
-  closeSettings: () => set({ screen: 'menu' }),
+  openRules: () => set({ screen: 'rules' }),
+  backToMenu: () => set({ screen: 'menu' }),
 }))
 
 if (import.meta.env.DEV) (window as unknown as { __ui: typeof useUi }).__ui = useUi

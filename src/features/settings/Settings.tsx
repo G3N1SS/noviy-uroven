@@ -39,7 +39,7 @@ function Switch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 
 export function Settings() {
   const controls = useUi((s) => s.controls)
-  const closeSettings = useUi((s) => s.closeSettings)
+  const backToMenu = useUi((s) => s.backToMenu)
 
   const initialMode = controls?.currentControl() ?? 'follow'
   const [mode, setMode] = useState<ControlMode>(initialMode)
@@ -82,7 +82,7 @@ export function Settings() {
   return (
     <div className="set">
       <div className="set__header">
-        <button className="set__back" aria-label="Назад" onClick={closeSettings}>
+        <button className="set__back" aria-label="Назад" onClick={backToMenu}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" />
           </svg>
