@@ -115,10 +115,14 @@
   },
   "economy": {
     "rewards": [
-      { "crystals": 500, "reward": "1 ГБ на тариф" },
-      { "crystals": 1500, "reward": "3 дня MiXX" },
-      { "crystals": 3000, "reward": "скидка 20% на тариф" },
-      { "crystals": 5000, "reward": "10 ГБ + месяц MiXX" }
+      { "id": "gb1", "cat": "tariff", "title": "1 ГБ на тариф", "price": 500 },
+      { "id": "gb10", "cat": "tariff", "title": "10 ГБ на тариф", "price": 3000 },
+      { "id": "disc20", "cat": "tariff", "title": "Скидка 20% на тариф", "price": 2500 },
+      { "id": "mixx3", "cat": "mixx", "title": "MiXX на 3 дня", "price": 1500 },
+      { "id": "mixx30", "cat": "mixx", "title": "MiXX на месяц", "price": 4000 },
+      { "id": "safewall30", "cat": "safewall", "title": "SafeWall на месяц", "price": 2000 },
+      { "id": "kaspersky", "cat": "partners", "title": "Kaspersky на 30 дней", "price": 3500 },
+      { "id": "kids", "cat": "partners", "title": "«Где мои дети» на месяц", "price": 3000 }
     ]
   }
 }

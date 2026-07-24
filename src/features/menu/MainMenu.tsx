@@ -11,7 +11,7 @@ import { getBestHeight, getCrystalTotal } from '../../shared/storage/local'
 // Минимальные инлайн-SVG (без иконочного шрифта — офлайн-first, ноль зависимостей).
 const ICON: Record<string, JSX.Element> = {
   store: (
-    <path d="M4 8h16l-1 4H5L4 8Zm0 0-1-3H2m4 9v6h12v-6M9 20v-5h6v5" />
+    <path d="M6.29977 5H21L19 12H7.37671M20 16H8L6 3H3M9 20C9 20.5523 8.55228 21 8 21C7.44772 21 7 20.5523 7 20C7 19.4477 7.44772 19 8 19C8.55228 19 9 19.4477 9 20ZM20 20C20 20.5523 19.5523 21 19 21C18.4477 21 18 20.5523 18 20C18 19.4477 18.4477 19 19 19C19.5523 19 20 19.4477 20 20Z" />
   ),
   trophy: <path d="M7 4h10v5a5 5 0 0 1-10 0V4Zm0 2H4v1a3 3 0 0 0 3 3m10-4h3v1a3 3 0 0 1-3 3M9 18h6m-3-4v4" />,
   help: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-2 6a2 2 0 1 1 3 1.7c-.7.5-1 .8-1 1.8m0 3v0" />,
@@ -31,6 +31,7 @@ export function MainMenu() {
   const [handoff, setHandoff] = useState(false)
   const openSettings = useUi((s) => s.openSettings)
   const openRules = useUi((s) => s.openRules)
+  const openShop = useUi((s) => s.openShop)
   // Полная интро один раз (первый показ меню); возврат из игры/настроек → лёгкий фейд.
   // Флаг в сторе (переживает двойной монтаж StrictMode и remount при навигации).
   const [entrance, setEntrance] = useState<'intro' | 'enter' | null>(
@@ -121,7 +122,9 @@ export function MainMenu() {
                 ? openSettings()
                 : n.key === 'help'
                   ? openRules()
-                  : soon(n.label)
+                  : n.key === 'store'
+                    ? openShop()
+                    : soon(n.label)
             }
           >
             {n.key === 'settings' ? (
