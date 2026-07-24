@@ -90,8 +90,8 @@
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  background: rgba(255, 52, 149, 0.12);
-  color: var(--t2-magenta);
+  background: rgba(255, 52, 149, 0.16);
+  color: var(--t2-white); /* фирстиль: иконки Ч/Б; магента остаётся фоном-плиткой */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -114,7 +114,7 @@
   margin-top: 20px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--t2-magenta);
+  color: var(--t2-white); /* фирстиль: текст Ч/Б */
   opacity: 0;
   transition: opacity 0.2s ease;
 }

@@ -14,7 +14,14 @@ export interface GameControls {
   currentControl: () => ControlMode
 }
 
-export type Screen = 'onboarding' | 'menu' | 'settings' | 'rules' | 'shop' | 'playing'
+export type Screen =
+  | 'onboarding'
+  | 'menu'
+  | 'settings'
+  | 'rules'
+  | 'shop'
+  | 'leaderboard'
+  | 'playing'
 
 interface UiState {
   screen: Screen
@@ -37,6 +44,7 @@ interface UiState {
   openSettings: () => void
   openRules: () => void
   openShop: () => void
+  openLeaderboard: () => void
   backToMenu: () => void
 }
 
@@ -70,6 +78,7 @@ export const useUi = create<UiState>((set, get) => ({
   openSettings: () => set({ screen: 'settings' }),
   openRules: () => set({ screen: 'rules' }),
   openShop: () => set({ screen: 'shop' }),
+  openLeaderboard: () => set({ screen: 'leaderboard' }),
   backToMenu: () => set({ screen: 'menu' }),
 }))
 

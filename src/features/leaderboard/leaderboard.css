@@ -1,0 +1,210 @@
+/**
+ * Лидерборд (Этап 3, ТЗ 3.5) — заглушка. Блок `lb` по БЭМ. Реальный локальный рекорд
+ * (карточка «ТЫ») + честный статус мирового топа (нужен бэкенд, Этап 6). Палитра T2:
+ * текст только Ч/Б, магента — только акценты (бордер карточки, ромб, пульс-точка).
+ */
+
+.lb {
+  position: fixed;
+  inset: 0;
+  z-index: 32;
+  display: flex;
+  flex-direction: column;
+  padding: calc(14px + env(safe-area-inset-top)) 14px 0;
+  box-sizing: border-box;
+  background: var(--t2-black);
+  font-family: 'Manrope', system-ui, sans-serif;
+  animation: lb-in 0.28s ease both;
+}
+
+@keyframes lb-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lb__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.lb__back {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--t2-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease;
+}
+.lb__back:active {
+  transform: scale(0.94);
+}
+
+.lb__title {
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--t2-white);
+  margin: 0;
+  flex: 1;
+}
+
+.lb__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--t2-white);
+  opacity: 0.5;
+}
+
+/* Карточка «ТЫ» — реальный локальный рекорд (магента только акцент-бордер) */
+.lb__card--you {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  background: rgba(255, 52, 149, 0.08);
+  border: 1px solid var(--t2-magenta);
+  margin-bottom: 14px;
+}
+
+.lb__you-badge {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--t2-magenta);
+  color: var(--t2-black);
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lb__you-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lb__height {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.lb__height-value {
+  font-family: 'Big Shoulders Stencil', 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1;
+  color: var(--t2-white);
+}
+.lb__height-unit {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--t2-white);
+  opacity: 0.6;
+}
+
+.lb__you-crystals {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-end;
+}
+.lb__crystal {
+  width: 10px;
+  height: 10px;
+  background: var(--t2-magenta);
+  transform: rotate(45deg);
+}
+.lb__crystal-count {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--t2-white);
+}
+
+/* Мировой топ — честная заглушка (нужен бэкенд, Этап 6) */
+.lb__world {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  padding: 0 24px calc(24px + env(safe-area-inset-bottom));
+}
+
+.lb__world-icon {
+  color: var(--t2-white);
+  opacity: 0.85;
+  margin-bottom: 4px;
+}
+
+.lb__world-title {
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--t2-white);
+}
+
+.lb__world-desc {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 260px;
+}
+
+.lb__world-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--t2-white);
+}
+
+/* Пульс-точка «ждёт подключения» (магента как акцент-заливка, не текст) */
+.lb__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--t2-magenta);
+  animation: lb-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes lb-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}

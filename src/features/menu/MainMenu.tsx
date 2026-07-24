@@ -32,6 +32,7 @@ export function MainMenu() {
   const openSettings = useUi((s) => s.openSettings)
   const openRules = useUi((s) => s.openRules)
   const openShop = useUi((s) => s.openShop)
+  const openLeaderboard = useUi((s) => s.openLeaderboard)
   // Полная интро один раз (первый показ меню); возврат из игры/настроек → лёгкий фейд.
   // Флаг в сторе (переживает двойной монтаж StrictMode и remount при навигации).
   const [entrance, setEntrance] = useState<'intro' | 'enter' | null>(
@@ -124,7 +125,9 @@ export function MainMenu() {
                   ? openRules()
                   : n.key === 'store'
                     ? openShop()
-                    : soon(n.label)
+                    : n.key === 'trophy'
+                      ? openLeaderboard()
+                      : soon(n.label)
             }
           >
             {n.key === 'settings' ? (

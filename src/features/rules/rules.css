@@ -66,11 +66,11 @@
   font-weight: 800;
   font-size: 17px;
   line-height: 1.35;
-  color: var(--t2-white);
+  color: rgba(255, 255, 255, 0.72); /* акцент-слова выделяем яркостью, не магентой (фирстиль: текст Ч/Б) */
   margin: 0 2px 16px;
 }
 .rules__goal b {
-  color: var(--t2-magenta);
+  color: var(--t2-white);
 }
 
 .rules__section {

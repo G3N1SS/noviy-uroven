@@ -159,7 +159,8 @@
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 1.5px;
-  color: var(--t2-magenta);
+  color: var(--t2-white); /* фирстиль: текст только Ч/Б — магента ушла в акцент-элементы */
+  opacity: 0.55;
   margin-top: 8px;
 }
 
