@@ -110,8 +110,8 @@
       "fullSpeedDeg": 30,
       "sensitivity": { "low": 45, "medium": 30, "high": 20 }
     },
-    "follow": { "gainMin": 14, "gainMax": 34 },
-    "zones": { "speedFactorMin": 0.6, "speedFactorMax": 1.0 }
+    "follow": { "gain": 30, "speedFactorMin": 0.55, "speedFactorMax": 1.2 },
+    "zones": { "speedFactorMin": 0.5, "speedFactorMax": 1.25 }
   },
   "economy": {
     "rewards": [

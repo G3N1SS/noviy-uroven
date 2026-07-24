@@ -6,14 +6,16 @@ import type { Controller, ControlMode } from './types'
  * Тач/мышь. Два варианта (конспект 2.4):
  *  - 'follow': персонаж плавно едет к X пальца (следование, не телепорт)
  *  - 'zones':  левая половина экрана = влево, правая = вправо
- * Чувствительность (0..1, своя на режим): follow → gain следования, zones → множитель
- * скорости толчка. Перечитывается на reset() (старт партии), как и калибровка наклона.
+ * Чувствительность (0..1, своя на режим): follow → потолок скорости слежения (gain
+ * фиксирован и snappy; чувствительность масштабирует max — иначе разницу съедает кламп),
+ * zones → множитель скорости толчка. Перечитывается на reset() (старт партии), как наклон.
  */
 export class TouchController implements Controller {
   readonly mode: ControlMode
   private pointerX: number | null = null
   private down = false
-  private gain = balance.controls.follow.gainMax
+  private gain = balance.controls.follow.gain
+  private followFactor = 1
   private zoneFactor = 1
 
   constructor(
@@ -32,7 +34,7 @@ export class TouchController implements Controller {
     const s = getControlSensitivity(this.mode) // 0..1
     if (this.mode === 'follow') {
       const f = balance.controls.follow
-      this.gain = f.gainMin + (f.gainMax - f.gainMin) * s
+      this.followFactor = f.speedFactorMin + (f.speedFactorMax - f.speedFactorMin) * s
     } else {
       const z = balance.controls.zones
       this.zoneFactor = z.speedFactorMin + (z.speedFactorMax - z.speedFactorMin) * s
@@ -66,9 +68,12 @@ export class TouchController implements Controller {
       const dir = this.pointerX < screenW / 2 ? -1 : 1
       return dir * maxSpeed * this.zoneFactor
     }
-    // follow (vx в px/сек)
-    const vx = (this.pointerX - playerX) * this.gain
-    return Math.max(-maxSpeed, Math.min(maxSpeed, vx))
+    // follow (vx в px/сек): чувствительность масштабирует ВСЮ кривую разом — и темп
+    // слежения (gain), и потолок. Иначе слепой угол: только gain незаметен вдали (кламп),
+    // только потолок — незаметен вблизи (не доезжаешь). Так реагирует на любом движении.
+    const cap = maxSpeed * this.followFactor
+    const vx = (this.pointerX - playerX) * this.gain * this.followFactor
+    return Math.max(-cap, Math.min(cap, vx))
   }
 
   destroy() {
