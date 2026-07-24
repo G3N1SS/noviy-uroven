@@ -34,6 +34,10 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,woff2,png,svg}'],
         navigateFallback: '/index.html', // офлайн-заход по любому пути отдаёт приложение
         cleanupOutdatedCaches: true,
+        // Первый SW забирает управление сразу, без «зайди второй раз»: игру часто открывают
+        // один раз по QR/ссылке, и она должна стать офлайновой уже с этого захода.
+        // `skipWaiting` при этом НЕ включаем — новая версия по-прежнему ждёт кнопки в тосте.
+        clientsClaim: true,
       },
     }),
   ],
