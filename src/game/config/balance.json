@@ -75,7 +75,8 @@
   },
   "score": {
     "metersPerPlatform": 10,
-    "pxPerMeter": 10
+    "pxPerMeter": 10,
+    "bestSaveSec": 2
   },
   "input": {
     "followGainPerSec": 22.5

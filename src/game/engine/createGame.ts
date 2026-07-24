@@ -235,6 +235,8 @@ export async function createGame(
   let shieldT = 0 // фаза анимации ауры щита
   let safewallSec = 0 // SafeWall: иммунитет к помехам + подсветка фейков, сек
   let recordCelebrated = false // конфетти рекорда — один раз за партию
+  let savedBest = bestHeight // что реально лежит на диске (bestHeight — рекорд НА НАЧАЛО партии)
+  let bestFlushCd = 0 // сек до следующей возможной записи рекорда (троттлинг sync-записи в LS)
   let dead = false // смерть засчитана — защита от повторного die() в том же батче шагов
   const boostersUsed: string[] = [] // типы подобранных бустеров за партию — в журнал IndexedDB
   let crystalCombo = 0 // цепочка кристаллов: растит высоту звука (арпеджио)
@@ -262,6 +264,10 @@ export async function createGame(
     cameraOffset = h * balance.camera.followRatio
     minY = 0
     crystalsThisRun = 0
+    // Рекорд на начало партии — свежий с диска: профиль мог восстановиться из IDB уже
+    // после создания игры (иначе Game Over соврал бы «рекорд побит»).
+    bestHeight = Math.max(bestHeight, getBestHeight())
+    bestFlushCd = balance.score.bestSaveSec
     dead = false
     boostersUsed.length = 0
     spawner.reset(balance.start.platformOffsetY, w)
@@ -280,6 +286,36 @@ export async function createGame(
     recordCelebrated = false
     controls.reset() // калибровка нуля наклона на старте партии
   }
+
+  /**
+   * Сбросить рекорд на диск (Этап 5, DoD «прогресс не теряется, если вкладку убили»).
+   * Раньше рекорд писался ТОЛЬКО в `die()` — забег на 900м, прерванный свайпом приложения
+   * из списка задач, крэшем вкладки или звонком, пропадал целиком. Кристаллы так не терялись
+   * (пишутся на каждый пикап), рекорд — терялся.
+   *
+   * `bestHeight` намеренно не трогаем: это рекорд НА НАЧАЛО партии, по нему считается
+   * «побит ли рекорд» и конфетти. На диск уезжает отдельный `savedBest`.
+   */
+  function flushBest(): void {
+    const runMax = Math.floor(-minY / balance.score.pxPerMeter)
+    // Сверяемся с диском, а не только со своей копией: `initStorage()` восстанавливает
+    // профиль из IndexedDB асинхронно и может поднять рекорд уже ПОСЛЕ старта игры.
+    // Без этой сверки скромный забег затёр бы восстановленный рекорд. Запись монотонна.
+    const onDisk = getBestHeight()
+    savedBest = Math.max(savedBest, onDisk)
+    if (runMax <= savedBest) return
+    savedBest = runMax
+    setBestHeight(savedBest)
+  }
+
+  // Последний шанс сохраниться на мобильных: `beforeunload` там не гарантирован, а вкладку
+  // выгружают именно через скрытие. `pagehide` ловит выгрузку, `visibilitychange` — сворачивание.
+  const onHide = () => {
+    if (document.visibilityState === 'hidden') flushBest()
+  }
+  const onPageHide = () => flushBest()
+  document.addEventListener('visibilitychange', onHide)
+  window.addEventListener('pagehide', onPageHide)
 
   // Экран Game Over (DOM-оверлей, БЭМ). Открывается на смерть и держит паузу.
   const gameOver = createGameOver({
@@ -303,10 +339,8 @@ export async function createGame(
     haptics.heavy()
     const heightMeters = Math.floor(-minY / balance.score.pxPerMeter)
     const beaten = heightMeters > bestHeight
-    if (beaten) {
-      bestHeight = heightMeters
-      setBestHeight(heightMeters)
-    }
+    flushBest() // на диск (обычно уже записан по ходу забега — тут добираем остаток)
+    if (beaten) bestHeight = heightMeters // рекорд для СЛЕДУЮЩЕЙ партии
     // Кошелёк уже в crystalTotal (пишем на каждый пикап); дублируем в LS на смерть — надёжнее.
     setCrystalTotal(crystalTotal)
     // Партия уходит в журнал IndexedDB (Этап 5): переживает вкладку и уедет в синк на Этапе 6.
@@ -463,6 +497,14 @@ export async function createGame(
     if (player.y < minY) minY = player.y
     const heightMeters = -minY / balance.score.pxPerMeter
     hud.text = `${Math.floor(heightMeters)}`
+
+    // 8а') Страховка от убитой вкладки: рекорд уезжает на диск по ходу забега, не только
+    // на смерти. Запись в localStorage синхронная, поэтому не чаще раза в `bestSaveSec`.
+    bestFlushCd -= dtSec
+    if (bestFlushCd <= 0) {
+      bestFlushCd = balance.score.bestSaveSec
+      flushBest()
+    }
 
     // 8a) Побитие рекорда — конфетти (один раз за партию; первые метры не празднуем)
     if (
@@ -678,9 +720,12 @@ export async function createGame(
   }
 
   const destroy = () => {
+    flushBest() // уход с экрана игры — тоже повод сохраниться
     app.ticker.remove(frame)
     window.removeEventListener('keydown', onKeyDown)
     window.removeEventListener('keyup', onKeyUp)
+    document.removeEventListener('visibilitychange', onHide)
+    window.removeEventListener('pagehide', onPageHide)
     controls.destroy()
     pauseMenu.destroy()
     gameOver.destroy()
