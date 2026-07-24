@@ -7,6 +7,7 @@ interface PauseMenuOptions {
   onPause: () => void
   onResume: () => void
   onRestart: () => void
+  onMenu: () => void
 }
 
 /**
@@ -93,6 +94,11 @@ export function createPauseMenu(opts: PauseMenuOptions): { destroy: () => void }
   restartBtn.textContent = 'Рестарт'
   card.appendChild(restartBtn)
 
+  const menuBtn = document.createElement('button')
+  menuBtn.className = 'pause__btn pause__btn--secondary'
+  menuBtn.textContent = 'В меню'
+  card.appendChild(menuBtn)
+
   // --- Логика показа/скрытия (через модификаторы) ---
   const open = () => {
     renderPills()
@@ -111,6 +117,12 @@ export function createPauseMenu(opts: PauseMenuOptions): { destroy: () => void }
   restartBtn.addEventListener('click', () => {
     opts.onRestart()
     close()
+  })
+  menuBtn.addEventListener('click', () => {
+    // уходим в меню: НЕ возобновляем игру (тикер уже стоит), только прячем оверлей
+    overlay.classList.remove('pause__overlay--open')
+    pauseBtn.classList.remove('pause__toggle--hidden') // вернётся видимой, когда меню закроется
+    opts.onMenu()
   })
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) close() // тап по фону = продолжить

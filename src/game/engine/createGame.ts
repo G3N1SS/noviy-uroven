@@ -19,8 +19,17 @@ import { getBestHeight, setBestHeight, getCrystalTotal, setCrystalTotal } from '
 export interface GameHandle {
   app: Application
   destroy: () => void
+  /** Свежая партия из меню: reset + запуск тикера (сброс таймингов кадра). */
+  start: () => void
+  /** Уход в меню: остановить тикер (мир замирает под оверлеем меню). */
+  toMenu: () => void
   /** DEV-объект для отладки/тюнинга. GameCanvas вешает его на window.__game (только живой инстанс). */
   debug: unknown
+}
+
+export interface GameOptions {
+  /** Вызывается из паузы/Game Over по кнопке «Меню» → React показывает главное меню. */
+  onMenu?: () => void
 }
 
 /**
@@ -28,7 +37,10 @@ export interface GameHandle {
  * гравитация, one-way платформы (velocity.y > 0 + AABB), автопрыжок, wrap,
  * камера только вверх, простая генерация, смерть/рестарт, счётчик высоты.
  */
-export async function createGame(parent: HTMLElement): Promise<GameHandle> {
+export async function createGame(
+  parent: HTMLElement,
+  opts: GameOptions = {},
+): Promise<GameHandle> {
   const app = new Application()
   await app.init({
     background: '#000000',
@@ -119,6 +131,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
       reset()
       app.ticker.start()
     },
+    onMenu: () => opts.onMenu?.(), // тикер уже остановлен паузой; React покажет меню
   })
 
   // Клавиши ←/→ (A/D) — удобство для теста на десктопе, поверх выбранной схемы.
@@ -259,6 +272,10 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     onRestart: () => {
       reset()
       app.ticker.start()
+    },
+    onMenu: () => {
+      app.ticker.stop()
+      opts.onMenu?.()
     },
   })
   function die() {
@@ -560,6 +577,7 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
   }
 
   app.ticker.add(frame)
+  app.ticker.stop() // старт на паузе: первым показывается главное меню (React), игра ждёт PLAY
 
   // DEV-объект для отладки/тюнинга. На window.__game его вешает GameCanvas — и только
   // для живого инстанса (StrictMode монтирует дважды и один инстанс уничтожается).
@@ -614,5 +632,13 @@ export async function createGame(parent: HTMLElement): Promise<GameHandle> {
     app.destroy(true, { children: true })
   }
 
-  return { app, destroy, debug }
+  const start = () => {
+    reset()
+    lastTime = performance.now() // без этого первый кадр посчитал бы весь простой в меню
+    accumulator = 0
+    app.ticker.start()
+  }
+  const toMenu = () => app.ticker.stop()
+
+  return { app, destroy, start, toMenu, debug }
 }

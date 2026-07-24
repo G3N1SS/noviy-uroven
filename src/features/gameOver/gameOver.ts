@@ -22,6 +22,7 @@ export interface GameOverPayload {
 
 interface GameOverOptions {
   onRestart: () => void
+  onMenu: () => void
 }
 
 export function createGameOver(opts: GameOverOptions): {
@@ -84,9 +85,18 @@ export function createGameOver(opts: GameOverOptions): {
   restartBtn.textContent = 'ЕЩЁ РАЗ'
   card.appendChild(restartBtn)
 
+  const menuBtn = document.createElement('button')
+  menuBtn.className = 'over__btn over__btn--secondary'
+  menuBtn.textContent = 'В меню'
+  card.appendChild(menuBtn)
+
   restartBtn.addEventListener('click', () => {
     hide()
     opts.onRestart()
+  })
+  menuBtn.addEventListener('click', () => {
+    hide()
+    opts.onMenu()
   })
 
   document.body.appendChild(overlay)

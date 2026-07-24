@@ -131,3 +131,10 @@
   background: var(--t2-magenta);
   color: var(--t2-black);
 }
+
+.over__btn--secondary {
+  background: transparent;
+  color: var(--t2-white);
+  border: 2px solid var(--t2-white);
+  margin-top: 10px;
+}

@@ -1,0 +1,516 @@
+/**
+ * Главное меню (Этап 3, вариант H «кнопка-экран»). Блок `menu` по БЭМ.
+ * PLAY занимает почти пол-экрана (главная точка входа, thumb-zone), заголовок —
+ * Manrope (не стенсил), рекорд справа-сверху, ряд иконок-разделов снизу.
+ * Цвета — токены :root, без хардкод-hex.
+ */
+
+.menu {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: var(--t2-black);
+  font-family: 'Manrope', system-ui, sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* --- Интро меню при первом запуске (staggered reveal, только transform/opacity) --- */
+/* Хореография: PLAY пружинит из центра → заголовок слева, рекорд справа → иконки
+   поднимаются со stagger → «сигнал» пульсирует. Возврат из игры — лёгкий фейд (--enter). */
+
+.menu--enter {
+  animation: intro-fade 0.34s ease both;
+}
+
+.menu--intro .menu__play {
+  animation: intro-hero 0.66s cubic-bezier(0.34, 1.45, 0.5, 1) 0.06s both;
+}
+.menu--intro .menu__play-label {
+  animation: intro-fade 0.4s ease 0.46s both;
+}
+.menu--intro .menu__play-sub {
+  animation: intro-fade 0.4s ease 0.56s both;
+}
+.menu--intro .menu__signal {
+  animation: intro-pop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) 0.4s both;
+}
+.menu--intro .menu__title {
+  animation: intro-left 0.56s cubic-bezier(0.2, 0.7, 0.2, 1) 0.26s both;
+}
+.menu--intro .menu__tagline {
+  animation: intro-fade 0.5s ease 0.5s both;
+}
+.menu--intro .menu__record {
+  animation: intro-right 0.56s cubic-bezier(0.2, 0.7, 0.2, 1) 0.34s both;
+}
+.menu--intro .menu__nav-btn {
+  animation: intro-up 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.menu--intro .menu__nav-btn:nth-child(1) {
+  animation-delay: 0.56s;
+}
+.menu--intro .menu__nav-btn:nth-child(2) {
+  animation-delay: 0.63s;
+}
+.menu--intro .menu__nav-btn:nth-child(3) {
+  animation-delay: 0.7s;
+}
+.menu--intro .menu__nav-btn:nth-child(4) {
+  animation-delay: 0.77s;
+}
+
+@keyframes intro-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes intro-hero {
+  0% {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes intro-pop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+@keyframes intro-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes intro-left {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes intro-right {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Кросс-диссолв в игру: фон меню уходит в прозрачность (игра уже стартовала под ним),
+   орб растворяется прямо в персонаже — без жёсткого реза. */
+.menu--handoff {
+  background: transparent;
+  transition: background-color 0.42s ease;
+  pointer-events: none;
+}
+
+.menu--handoff .menu__launch {
+  opacity: 0;
+  transition: opacity 0.42s ease;
+}
+
+.menu__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.menu__title {
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.05;
+  color: var(--t2-white);
+  margin: 4px 0 0;
+}
+
+.menu__tagline {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--t2-magenta);
+  margin-top: 8px;
+}
+
+.menu__record {
+  text-align: right;
+}
+
+.menu__record-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.menu__record-value {
+  font-family: 'Big Shoulders Stencil', 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--t2-white);
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.menu__record-crystals {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.menu__crystal {
+  width: 8px;
+  height: 8px;
+  background: var(--t2-magenta);
+  transform: rotate(45deg);
+}
+
+.menu__crystal-count {
+  font-weight: 800;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* PLAY — кнопка-экран (чуть меньше, по центру: воздух сверху и снизу) */
+.menu__play {
+  flex: 0 0 auto;
+  height: 52vh;
+  max-height: 360px;
+  margin: auto 0;
+  border: none;
+  border-radius: 20px;
+  background: var(--t2-magenta);
+  color: var(--t2-black);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease;
+}
+
+.menu__play:active {
+  transform: scale(0.985);
+}
+
+.menu__play-label {
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: 2px;
+}
+
+.menu__play-sub {
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0.7;
+}
+
+/* «сигнал» в кнопке — маленький значок внизу */
+.menu__signal {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--t2-black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu__signal::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--t2-magenta);
+}
+
+/* Ряд разделов */
+.menu__nav {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.menu__nav-btn {
+  width: 44px;
+  height: 44px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 13px;
+  background: transparent;
+  color: var(--t2-white);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease;
+}
+
+.menu__nav-btn:active {
+  transform: scale(0.94);
+}
+
+/* Тост «Скоро» для ещё не готовых разделов (честно, вместо мёртвой ссылки) */
+.menu__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 78px;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--t2-white);
+  font-size: 13px;
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.menu__hint--show {
+  opacity: 1;
+}
+
+/* --- «Прогруз» (AAA-хореография, ~1.05с, только transform/opacity — 60fps) ---
+   Тайминг: 0–0.4с контент меню кинематографично «разлетается» (шапка вверх, нав вниз,
+   кнопка схлопывается) → орб-«сигнал» рождается с overshoot-пружиной, летит вверх с
+   хвостом-шлейфом и squash&stretch (как в игре) → на прибытии энергетический бёрст
+   (два кольца + 6 искр) ровно в точке будущего персонажа (58vh ≈ followRatio 60%). */
+
+.menu--launching .menu__top {
+  opacity: 0;
+  transform: translateY(-26px);
+  transition:
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.menu--launching .menu__nav {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.05s;
+  pointer-events: none;
+}
+
+.menu--launching .menu__play {
+  opacity: 0;
+  transform: scale(0.93);
+  transition:
+    opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.menu--launching .menu__hint {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Носитель полёта: позиция цели (58vh), взлёт — чистый translateY */
+.menu__launch {
+  position: fixed;
+  left: 50vw;
+  top: 58vh;
+  z-index: 31;
+  pointer-events: none;
+  animation: launch-rise 0.9s cubic-bezier(0.34, 0.7, 0.18, 1) forwards;
+}
+
+@keyframes launch-rise {
+  0% {
+    transform: translate(-50%, 14vh);
+  }
+  22% {
+    transform: translate(-50%, 13.4vh); /* короткое зависание — рождение орба */
+  }
+  100% {
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Орб: свечение «сигнала» + пружина рождения + squash&stretch в полёте */
+.menu__launch-orb {
+  position: absolute;
+  left: -26px;
+  top: -26px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #fff 15%,
+    var(--t2-magenta) 38%,
+    rgba(255, 52, 149, 0.3) 62%,
+    rgba(255, 52, 149, 0.1) 82%,
+    transparent 100%
+  );
+  animation: launch-orb 0.9s cubic-bezier(0.3, 0.6, 0.3, 1) forwards;
+}
+
+@keyframes launch-orb {
+  0% {
+    transform: scale(0.18);
+    opacity: 0;
+  }
+  14% {
+    transform: scale(1.22); /* overshoot-пружина */
+    opacity: 1;
+  }
+  24% {
+    transform: scale(0.94);
+  }
+  40% {
+    transform: scale(0.9, 1.14); /* stretch — быстрый подъём */
+  }
+  72% {
+    transform: scale(0.92, 1.1);
+  }
+  86% {
+    transform: scale(1.1, 0.9); /* squash — торможение у цели */
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Хвост-шлейф под орбом (как трейл в игре) */
+.menu__launch-tail {
+  position: absolute;
+  left: -7px;
+  top: 6px;
+  width: 14px;
+  height: 88px;
+  border-radius: 7px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 52, 149, 0.5),
+    rgba(255, 52, 149, 0.16) 55%,
+    transparent
+  );
+  transform-origin: top center;
+  animation: launch-tail 0.9s cubic-bezier(0.3, 0.6, 0.3, 1) forwards;
+}
+
+@keyframes launch-tail {
+  0%,
+  24% {
+    opacity: 0;
+    transform: scaleY(0.1);
+  }
+  45% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  80% {
+    opacity: 0.5;
+    transform: scaleY(0.75);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(0.3);
+  }
+}
+
+/* Бёрст прибытия: два расходящихся кольца (маджента + белое) */
+.menu__launch-ring {
+  position: absolute;
+  left: -26px;
+  top: -26px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid var(--t2-magenta);
+  opacity: 0;
+  animation: launch-ring 0.5s cubic-bezier(0.2, 0.6, 0.3, 1) 0.78s forwards;
+}
+
+.menu__launch-ring--2 {
+  border-color: var(--t2-white);
+  border-width: 1.5px;
+  animation-delay: 0.86s;
+  animation-duration: 0.45s;
+}
+
+@keyframes launch-ring {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* Искры бёрста: направление через --dx/--dy (инлайн-переменные) */
+.menu__launch-spark {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  background: var(--t2-magenta);
+  transform: rotate(45deg) scale(0);
+  opacity: 0;
+  animation: launch-spark 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) 0.8s forwards;
+}
+
+.menu__launch-spark--white {
+  background: var(--t2-white);
+}
+
+@keyframes launch-spark {
+  0% {
+    transform: translate(0, 0) rotate(45deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) rotate(45deg) scale(0.2);
+    opacity: 0;
+  }
+}

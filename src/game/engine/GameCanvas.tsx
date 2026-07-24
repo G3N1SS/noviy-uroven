@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { createGame, type GameHandle } from './createGame'
+import { useUi } from '../../shared/store/ui'
 
 /**
  * React-обёртка над PixiJS. Монтирует канвас один раз, чистит при размонтировании.
@@ -16,12 +17,14 @@ export function GameCanvas() {
     let handle: GameHandle | null = null
     let cancelled = false
 
-    createGame(el).then((h) => {
+    createGame(el, { onMenu: () => useUi.getState().openMenu() }).then((h) => {
       if (cancelled) {
         h.destroy()
         return
       }
       handle = h
+      // Мост React↔движок: экраны дёргают start()/toMenu() через стор.
+      useUi.getState().registerGame({ start: h.start, toMenu: h.toMenu })
       if (import.meta.env.DEV) Reflect.set(globalThis, '__game', h.debug)
     })
 
