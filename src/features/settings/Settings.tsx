@@ -12,6 +12,7 @@ import {
   getControlSensitivity,
   setControlSensitivity,
 } from '../../shared/storage/local'
+import { audio } from '../../shared/audio/audioManager'
 
 /**
  * Экран настроек (ТЗ 3.5, вариант A). Управление (пилюли + чувствительность наклона) —
@@ -124,7 +125,15 @@ export function Settings() {
         <div className="set__label">ЗВУК И ВИБРАЦИЯ</div>
         <div className="set__row">
           <span className="set__row-label">Звуки</span>
-          <Switch on={sound} onToggle={() => toggle(sound, setSoundS, setSound)} />
+          <Switch
+            on={sound}
+            onToggle={() =>
+              toggle(sound, setSoundS, (v) => {
+                setSound(v)
+                audio.setSound(v) // живое применение — движок сразу замолкает/оживает
+              })
+            }
+          />
         </div>
         <div className="set__row">
           <span className="set__row-label">Музыка</span>

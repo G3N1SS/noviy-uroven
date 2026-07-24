@@ -16,6 +16,7 @@ import type { ControlMode } from '../controls/types'
 import { createPauseMenu } from '../controls/pauseMenu'
 import { createGameOver } from '../../features/gameOver/gameOver'
 import { getBestHeight, setBestHeight, getCrystalTotal, setCrystalTotal } from '../../shared/storage/local'
+import { audio } from '../../shared/audio/audioManager'
 
 export interface GameHandle {
   app: Application
@@ -232,6 +233,8 @@ export async function createGame(
   let shieldT = 0 // фаза анимации ауры щита
   let safewallSec = 0 // SafeWall: иммунитет к помехам + подсветка фейков, сек
   let recordCelebrated = false // конфетти рекорда — один раз за партию
+  let crystalCombo = 0 // цепочка кристаллов: растит высоту звука (арпеджио)
+  let crystalComboCd = 0 // сек до сброса комбо (пауза между сборами рвёт цепочку)
 
   const { radius: r } = balance.player
   const { maxHorizontalSpeed, horizontalDampingPerSec } = balance.physics
@@ -285,6 +288,7 @@ export async function createGame(
   })
   function die() {
     app.ticker.stop()
+    audio.death()
     const heightMeters = Math.floor(-minY / balance.score.pxPerMeter)
     const beaten = heightMeters > bestHeight
     if (beaten) {
@@ -358,13 +362,17 @@ export async function createGame(
             // фейк-платформа: растворяется без отскока — проваливаемся дальше
             p.active = false
             p.view.visible = false
+            audio.fake()
             continue
           }
           player.y = top - r
           player.vy = -jumpVel // автопрыжок
           if (p.type === 'rrl' && p.collapseTimer < 0) {
             p.collapseTimer = balance.platforms.types.rrl.collapseMs / 1000 // старт разрушения
-          } else if (p.type === 'vols' || p.type === 'moving') {
+            audio.jumpRrl() // отскок
+            audio.shatter() // крошево (визуальный распад начинается тут же)
+          } else {
+            audio.jumpVols() // ВОЛС/движущаяся — мягкий блип
             p.bounceT = 0 // landing-bounce (пружина проседания)
           }
           break
@@ -376,6 +384,7 @@ export async function createGame(
     if (safewallSec === 0 && obstacles.hit(player.x, player.y, r)) {
       player.vy = balance.obstacles.interference.knockbackVy
       controlLockSec = balance.obstacles.interference.controlLockSec
+      audio.glitch()
     }
 
     // 5) Камера — только вверх
@@ -392,6 +401,8 @@ export async function createGame(
     // 6b) Сбор бустеров пролётом (+ радиальная волна цвета бустера)
     for (const type of boosters.collect(player.x, player.y, r)) {
       fx.ring(player.x, player.y, boosterColor(type))
+      // оттенок звука под тип: Гигабэк выше/ярче, MiXX-щит тёплый, SafeWall — средний
+      audio.booster(type === 'gigaback' ? 300 : type === 'safewall' ? 240 : 200)
       if (type === 'gigaback') {
         gigabackSec = balance.boosters.gigaback.durationMs / 1000
       } else if (type === 'mixxShield') {
@@ -405,6 +416,10 @@ export async function createGame(
     if (safewallSec > 0) safewallSec = Math.max(0, safewallSec - dtSec)
 
     // 7) Сбор кристаллов пролётом (Гигабэк ×2) + вспышка осколков и флоат «+N»
+    if (crystalComboCd > 0) {
+      crystalComboCd -= dtSec
+      if (crystalComboCd <= 0) crystalCombo = 0 // пауза → цепочка порвана
+    }
     const got = crystals.collect(player.x, player.y, r)
     if (got > 0) {
       const gained = got * (gigabackSec > 0 ? 2 : 1)
@@ -414,6 +429,9 @@ export async function createGame(
       setCrystalTotal(crystalTotal) // копим на диск инкрементально — на случай крэша вкладки
       fx.burst(player.x, player.y, [0xff3495, 0xffffff, 0xff3495])
       fx.float(`+${gained}`, player.x, player.y)
+      audio.crystal(crystalCombo) // высота растёт по цепочке
+      crystalCombo = Math.min(crystalCombo + got, 12)
+      crystalComboCd = 0.55
     }
 
     // 8) Счёт (высота в метрах)
@@ -432,7 +450,9 @@ export async function createGame(
     }
 
     // 8b) Эпохи: смена фона + баннер перехода по высоте; параллакс-сцена фона; частицы
+    const prevEpoch = epochs.current
     epochs.update(heightMeters, dtSec)
+    if (epochs.current > prevEpoch && prevEpoch > 0) audio.epochChord(epochs.current) // «вау» перехода (не на старте)
     background.update(dtSec, cameraOffset, epochs.current)
     fx.update(dtSec)
     screenFx.update(dtSec)
@@ -538,6 +558,7 @@ export async function createGame(
         player.y = h - r - cameraOffset // возвращаем на нижний край
         player.vy = -jumpVel * balance.boosters.rescueBounceFactor // мощный отскок вверх
         controlLockSec = 0
+        audio.rescue()
       } else {
         die()
       }
