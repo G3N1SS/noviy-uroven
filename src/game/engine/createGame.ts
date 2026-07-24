@@ -16,6 +16,7 @@ import type { ControlMode } from '../controls/types'
 import { createPauseMenu } from '../controls/pauseMenu'
 import { createGameOver } from '../../features/gameOver/gameOver'
 import { getBestHeight, setBestHeight, getCrystalTotal, setCrystalTotal } from '../../shared/storage/local'
+import { recordSession } from '../../shared/storage/db'
 import { audio } from '../../shared/audio/audioManager'
 import { haptics } from '../../shared/audio/haptics'
 
@@ -234,6 +235,8 @@ export async function createGame(
   let shieldT = 0 // фаза анимации ауры щита
   let safewallSec = 0 // SafeWall: иммунитет к помехам + подсветка фейков, сек
   let recordCelebrated = false // конфетти рекорда — один раз за партию
+  let dead = false // смерть засчитана — защита от повторного die() в том же батче шагов
+  const boostersUsed: string[] = [] // типы подобранных бустеров за партию — в журнал IndexedDB
   let crystalCombo = 0 // цепочка кристаллов: растит высоту звука (арпеджио)
   let crystalComboCd = 0 // сек до сброса комбо (пауза между сборами рвёт цепочку)
 
@@ -259,6 +262,8 @@ export async function createGame(
     cameraOffset = h * balance.camera.followRatio
     minY = 0
     crystalsThisRun = 0
+    dead = false
+    boostersUsed.length = 0
     spawner.reset(balance.start.platformOffsetY, w)
     crystals.reset(balance.start.platformOffsetY) // кошелёк crystalTotal НЕ трогаем
     obstacles.reset(balance.start.platformOffsetY)
@@ -288,6 +293,11 @@ export async function createGame(
     },
   })
   function die() {
+    // Идемпотентность: `ticker.stop()` не прерывает текущий батч фиксированных шагов
+    // (accumulator может дать 2-3 simulate() за кадр), а игрок остаётся ниже края —
+    // без флага смерть засчиталась бы несколько раз (дубли партий в журнале).
+    if (dead) return
+    dead = true
     app.ticker.stop()
     audio.death()
     haptics.heavy()
@@ -299,6 +309,14 @@ export async function createGame(
     }
     // Кошелёк уже в crystalTotal (пишем на каждый пикап); дублируем в LS на смерть — надёжнее.
     setCrystalTotal(crystalTotal)
+    // Партия уходит в журнал IndexedDB (Этап 5): переживает вкладку и уедет в синк на Этапе 6.
+    void recordSession({
+      height: heightMeters,
+      crystals: crystalsThisRun,
+      epoch: epochs.current,
+      boostersUsed,
+      walletTotal: crystalTotal,
+    })
     gameOver.show({
       height: heightMeters,
       best: bestHeight,
@@ -404,6 +422,7 @@ export async function createGame(
 
     // 6b) Сбор бустеров пролётом (+ радиальная волна цвета бустера)
     for (const type of boosters.collect(player.x, player.y, r)) {
+      boostersUsed.push(type)
       fx.ring(player.x, player.y, boosterColor(type))
       // оттенок звука под тип: Гигабэк выше/ярче, MiXX-щит тёплый, SafeWall — средний
       audio.booster(type === 'gigaback' ? 300 : type === 'safewall' ? 240 : 200)
