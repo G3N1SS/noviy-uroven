@@ -162,6 +162,11 @@ export async function createGame(
   const hudCard = new Container()
   hudCard.x = 10
   hudCard.y = 10
+  // HUD всегда поверх всего. У Pixi нет CSS z-index: порядок задаёт addChild, поэтому
+  // включаем сортировку сцены и поднимаем карточку — иначе её накрывают слои, добавленные
+  // позже (баннер эпохи, кольца бустеров).
+  app.stage.sortableChildren = true
+  hudCard.zIndex = 9999
   const cardBg = new Graphics()
   const cardMask = new Graphics()
   hudCard.addChild(cardBg, cardMask)
@@ -543,8 +548,9 @@ export async function createGame(
     const cardW = Math.max(hudUnit.x + hudUnit.width, 96) + padX
     const cardH = rowY + crystalHud.height + 8 + eb.heightPx
     cardBg.clear()
-    cardBg.roundRect(0, 0, cardW, cardH, 14).fill({ color: 0xffffff, alpha: 0.04 })
-    cardBg.roundRect(0, 0, cardW, cardH, 14).stroke({ color: 0xffffff, alpha: 0.12, width: 1 })
+    const card = balance.hud.card
+    cardBg.roundRect(0, 0, cardW, cardH, 14).fill({ color: 0xffffff, alpha: card.bgAlpha })
+    cardBg.roundRect(0, 0, cardW, cardH, 14).stroke({ color: 0xffffff, alpha: card.strokeAlpha, width: 1 })
     cardMask.clear().roundRect(0, 0, cardW, cardH, 14).fill(0xffffff)
     // прогресс эпохи — кромка. null = финальная эпоха: кромку не рисуем.
     const prog = epochs.progress(heightMeters)

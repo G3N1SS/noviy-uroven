@@ -88,6 +88,7 @@
     "parallax": { "far": 0.2, "mid": 0.5, "near": 0.8 }
   },
   "hud": {
+    "card": { "bgAlpha": 0.1, "strokeAlpha": 0.12 },
     "epochBar": { "widthPx": 104, "heightPx": 4, "gapY": 10 }
   },
   "particles": {
