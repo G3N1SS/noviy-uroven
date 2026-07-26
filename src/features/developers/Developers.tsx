@@ -6,7 +6,7 @@ import { useUi } from '../../shared/store/ui'
  * бенто-карточки, текст только Ч/Б, магента — акцент бейджа-инициала.
  */
 const TEAM: Array<{ name: string; handle: string }> = [
-  { name: 'Саркисян А.С.', handle: 'g3n1ss' },
+  { name: 'Саркисян А.С.', handle: 'g3n1sss' },
   { name: 'Кузнецов И.Р.', handle: 'shxdw' },
   { name: 'Полошков Я.В.', handle: 'wexul' },
 ]
