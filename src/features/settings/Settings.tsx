@@ -128,20 +128,20 @@ export function Settings() {
       </div>
 
       <div className="set__card">
-        <div className="set__label">ПОЗЫВНОЙ</div>
+        <div className="set__label">НИКНЕЙМ</div>
         <div className="set__nick">
           <input
             className={`set__input${hint?.kind === 'error' ? ' set__input--error' : ''}`}
             type="text"
             inputMode="text"
             maxLength={NAME_MAX}
-            placeholder="Твой позывной"
+            placeholder="Твой никнейм"
             value={nick}
             onChange={(e) => {
               setNick(e.target.value)
               if (hint) setHint(null)
             }}
-            aria-label="Позывной"
+            aria-label="Никнейм"
           />
           <button className="set__save" onClick={saveNick} disabled={saving || !nickDirty}>
             Сохранить
