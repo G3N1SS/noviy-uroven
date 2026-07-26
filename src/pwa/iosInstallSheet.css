@@ -32,7 +32,12 @@
   padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   font-family: 'Manrope', system-ui, sans-serif;
+  /* Выезд снизу — CSS-анимацией (не rAF). Драг/пружина свайпа — через transform:var(--drag).
+     touch-action:none, чтобы вертикальный свайп не скроллил страницу под шторкой. */
+  transform: translateY(var(--drag, 0px));
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
   animation: ish-up 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  touch-action: none;
 }
 
 @keyframes ish-up {
@@ -42,6 +47,16 @@
   to {
     transform: translateY(0);
   }
+}
+
+/* Игрок коснулся панели → гасим выезд-анимацию, чтобы transform:var(--drag) заработал. */
+.ish__panel--free {
+  animation: none;
+}
+
+/* Активный свайп: следуем за пальцем 1:1, без сглаживания. */
+.ish__panel--dragging {
+  transition: none;
 }
 
 .ish__grip {
