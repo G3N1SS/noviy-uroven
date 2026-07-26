@@ -316,10 +316,9 @@
 /* Установка на домашний экран (PWA, Этап 5). Появляется только когда браузер
    прислал beforeinstallprompt — на iOS кнопки не будет вовсе. */
 .menu__install {
-  position: absolute;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
+  flex: 0 0 auto;
+  align-self: center;
+  margin-top: 14px;
   padding: 10px 18px;
   border: 1px solid var(--surface-2);
   border-radius: 999px;
