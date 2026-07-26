@@ -61,10 +61,20 @@ let singleton: Promise<Db> | null = null
  * (Neon-интеграция Vercel кладёт оба). Без строки подключения (локальный запуск функций)
  * — pglite на диск в `.pglite/`, чтобы данные переживали перезапуск dev-сервера.
  * Схема гарантирована до первого запроса.
+ *
+ * ВАЖНО: на Vercel (`VERCEL=1`) БЕЗ строки подключения НЕ уходим в pglite — его WASM в
+ * serverless делает abort() и валит функцию мимо try/catch (FUNCTION_INVOCATION_FAILED).
+ * Вместо этого бросаем понятную ошибку (её поймает withErrors → читаемый JSON 500),
+ * не кэшируя reject, чтобы после настройки переменной новый инстанс поднялся сам.
  */
 export function getDb(): Promise<Db> {
+  const url = process.env.DATABASE_URL ?? process.env.POSTGRES_URL
+  if (!url && process.env.VERCEL) {
+    return Promise.reject(
+      new Error('DATABASE_URL не задан в окружении Vercel — добавь переменную Neon (Production) и передеплой.'),
+    )
+  }
   if (!singleton) {
-    const url = process.env.DATABASE_URL ?? process.env.POSTGRES_URL
     singleton = (url ? createNeonDb(url) : createPgliteDb('.pglite')).then(async (db) => {
       await ensureSchema(db)
       return db
