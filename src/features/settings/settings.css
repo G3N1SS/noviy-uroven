@@ -194,3 +194,72 @@
   color: rgba(255, 255, 255, 0.35);
   margin: 2px 2px 0;
 }
+
+/* Позывной (Этап 6): поле ника + сохранение. */
+.set__nick {
+  display: flex;
+  gap: 6px;
+}
+
+.set__input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--t2-white);
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color 0.14s ease;
+}
+.set__input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+}
+.set__input:focus {
+  border-color: var(--t2-magenta);
+}
+.set__input--error {
+  border-color: var(--t2-magenta);
+}
+
+.set__save {
+  flex: 0 0 auto;
+  padding: 0 16px;
+  border: none;
+  border-radius: 12px;
+  background: var(--t2-magenta);
+  color: var(--t2-black);
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.1s ease,
+    opacity 0.14s ease;
+}
+.set__save:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.set__save:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+.set__hint {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 8px 2px 0;
+  min-height: 14px;
+}
+.set__hint--ok {
+  color: var(--t2-white);
+}
+.set__hint--error {
+  color: var(--t2-magenta);
+}

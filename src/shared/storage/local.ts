@@ -11,6 +11,9 @@
 
 const K_BEST = 'novy-uroven:best-height'
 const K_CRYSTAL = 'novy-uroven:crystal-total'
+const K_PLAYER_ID = 'novy-uroven:player-id'
+const K_NAME = 'novy-uroven:name' // отображаемый ник (дефолт с сервера ИЛИ выбранный)
+const K_NAME_CUSTOM = 'novy-uroven:name-custom' // '1' — игрок задал ник сам (синк пушит его)
 const K_SOUND = 'novy-uroven:sound'
 const K_MUSIC = 'novy-uroven:music'
 const K_VIBRO = 'novy-uroven:vibro'
@@ -49,6 +52,64 @@ export function getCrystalTotal(): number {
 
 export function setCrystalTotal(n: number): void {
   writeNumber(K_CRYSTAL, n)
+}
+
+// --- Анонимная идентичность игрока (Этап 6). playerId привязывает профиль/сессии/
+// лидерборд к устройству до T2 SSO (Этап 7). Хранится в LS (синхронное чтение перед
+// запросом) + зеркалится в IDB-профиль, чтобы пережить очистку LS. ---
+
+export function getPlayerId(): string {
+  try {
+    return localStorage.getItem(K_PLAYER_ID) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+export function setPlayerId(id: string): void {
+  try {
+    localStorage.setItem(K_PLAYER_ID, id)
+  } catch {
+    /* private mode/квота — молча; идентичность восстановится из IDB при следующем старте */
+  }
+}
+
+/** Отображаемый ник (пустая строка — ещё не знаем, покажем серверный дефолт после синка). */
+export function getDisplayName(): string {
+  try {
+    return localStorage.getItem(K_NAME) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+/** Игрок задал ник сам — синк отправляет его как авторитетный (last-write-wins по устройствам). */
+export function hasCustomName(): boolean {
+  try {
+    return localStorage.getItem(K_NAME_CUSTOM) === '1'
+  } catch {
+    return false
+  }
+}
+
+/** Пользователь выбрал ник в настройках. */
+export function setCustomName(name: string): void {
+  try {
+    localStorage.setItem(K_NAME, name)
+    localStorage.setItem(K_NAME_CUSTOM, '1')
+  } catch {
+    /* молча */
+  }
+}
+
+/** Принять серверное имя для показа (дефолт/ник с другого устройства) — но не затирать свой. */
+export function adoptServerName(name: string): void {
+  if (hasCustomName() || !name) return
+  try {
+    localStorage.setItem(K_NAME, name)
+  } catch {
+    /* молча */
+  }
 }
 
 // --- Настройки (Этап 3). Тумблеры звука — задел под Этап 4 (аудио-слоя пока нет). ---

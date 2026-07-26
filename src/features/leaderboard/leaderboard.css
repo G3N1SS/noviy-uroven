@@ -70,6 +70,156 @@
   opacity: 0.5;
 }
 
+/* Вкладки scope (Мир/Город/Друзья) */
+.lb__tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.lb__tab {
+  flex: 1;
+  padding: 10px 0;
+  text-align: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--t2-white);
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease,
+    transform 0.1s ease;
+}
+.lb__tab:active {
+  transform: scale(0.97);
+}
+.lb__tab--active {
+  background: var(--t2-magenta);
+  border-color: var(--t2-magenta);
+  color: var(--t2-black);
+}
+
+/* Переключатель периода (Неделя/Всё время) — сегментированный, тоньше вкладок */
+.lb__toggle {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+.lb__seg {
+  flex: 1;
+  padding: 8px 0;
+  text-align: center;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+.lb__seg--active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--t2-white);
+}
+
+/* Ник в карточке «ТЫ» */
+.lb__you-nick {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--t2-white);
+  margin-bottom: 2px;
+}
+.lb__you-tag {
+  flex: 0 0 auto;
+  align-self: center;
+  padding: 5px 10px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Состояние загрузки */
+.lb__state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  font-weight: 700;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+/* Список топа — прокручиваемый */
+.lb__list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
+}
+.lb__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.lb__row--me {
+  background: rgba(255, 52, 149, 0.1);
+  border: 1px solid var(--t2-magenta);
+  padding: 11px 13px;
+}
+.lb__rank {
+  flex: 0 0 auto;
+  min-width: 28px;
+  font-family: 'Big Shoulders Stencil', 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.lb__rank--top {
+  color: var(--t2-magenta);
+}
+.lb__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--t2-white);
+}
+.lb__row-height {
+  flex: 0 0 auto;
+  font-family: 'Big Shoulders Stencil', 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--t2-white);
+}
+.lb__row-unit {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  opacity: 0.5;
+}
+
 /* Карточка «ТЫ» — реальный локальный рекорд (магента только акцент-бордер) */
 .lb__card--you {
   display: flex;

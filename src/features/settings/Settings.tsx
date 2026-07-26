@@ -11,9 +11,15 @@ import {
   setVibro,
   getControlSensitivity,
   setControlSensitivity,
+  getDisplayName,
+  setCustomName,
 } from '../../shared/storage/local'
 import { audio } from '../../shared/audio/audioManager'
 import { haptics } from '../../shared/audio/haptics'
+import { sanitizeName, NAME_MAX } from '../../shared/net/name'
+import { ensurePlayerId } from '../../shared/net/identity'
+import { updateName } from '../../shared/net/api'
+import { syncNow } from '../../shared/net/sync'
 
 /**
  * Экран настроек (ТЗ 3.5, вариант A). Управление (пилюли + чувствительность наклона) —
@@ -50,6 +56,35 @@ export function Settings() {
   const [sound, setSoundS] = useState(getSound)
   const [music, setMusicS] = useState(getMusic)
   const [vibro, setVibroS] = useState(getVibro)
+
+  // Позывной (Этап 6): показывается в лидерборде. Пусто — покажем плейсхолдер.
+  const [nick, setNick] = useState(getDisplayName)
+  const [hint, setHint] = useState<{ text: string; kind: 'ok' | 'error' } | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const saveNick = async () => {
+    const clean = sanitizeName(nick)
+    if (!clean) {
+      setHint({ text: `Минимум 2 символа, до ${NAME_MAX}`, kind: 'error' })
+      return
+    }
+    setSaving(true)
+    setCustomName(clean) // сохранён локально сразу — не потеряется даже офлайн
+    setNick(clean)
+    const online = navigator.onLine !== false
+    try {
+      if (online) await updateName(ensurePlayerId(), clean) // мгновенно на сервер
+      void syncNow(true)
+      setHint({ text: online ? 'Сохранено' : 'Сохранится при подключении', kind: 'ok' })
+    } catch {
+      // сервер недоступен — ник уже локально, синк дошлёт его позже
+      setHint({ text: 'Сохранится при подключении', kind: 'ok' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const nickDirty = sanitizeName(nick) !== null && nick.trim() !== getDisplayName()
 
   const pickMode = async (m: ControlMode) => {
     if (m === mode) return
@@ -90,6 +125,34 @@ export function Settings() {
           </svg>
         </button>
         <h1 className="set__title">Настройки</h1>
+      </div>
+
+      <div className="set__card">
+        <div className="set__label">ПОЗЫВНОЙ</div>
+        <div className="set__nick">
+          <input
+            className={`set__input${hint?.kind === 'error' ? ' set__input--error' : ''}`}
+            type="text"
+            inputMode="text"
+            maxLength={NAME_MAX}
+            placeholder="Твой позывной"
+            value={nick}
+            onChange={(e) => {
+              setNick(e.target.value)
+              if (hint) setHint(null)
+            }}
+            aria-label="Позывной"
+          />
+          <button className="set__save" onClick={saveNick} disabled={saving || !nickDirty}>
+            Сохранить
+          </button>
+        </div>
+        {hint && (
+          <p className={`set__hint set__hint--${hint.kind}`}>{hint.text}</p>
+        )}
+        {!hint && (
+          <p className="set__hint">Так тебя увидят в лидерборде</p>
+        )}
       </div>
 
       <div className="set__card">

@@ -1,5 +1,15 @@
 import { openDB, type IDBPDatabase, type DBSchema } from 'idb'
-import { getBestHeight, setBestHeight, getCrystalTotal, setCrystalTotal } from './local'
+import {
+  getBestHeight,
+  setBestHeight,
+  getCrystalTotal,
+  setCrystalTotal,
+  getPlayerId,
+  setPlayerId,
+  getDisplayName,
+  adoptServerName,
+} from './local'
+import { ensurePlayerId } from '../net/identity'
 
 /**
  * Долговременное хранилище (Этап 5, конспект 4.4). IndexedDB — источник правды:
@@ -26,6 +36,10 @@ export interface GameSession {
   boostersUsed: string[]
   timestamp: number
   synced: boolean
+  /** (Этап 6 anti-cheat) длительность партии, мс — для оценки скороподъёмности на сервере. */
+  durationMs?: number
+  /** (Этап 6 anti-cheat) число прыжков за партию — верхняя граница набранной высоты. */
+  jumps?: number
 }
 
 /** Профиль игрока. Единственная запись с id='me'. */
@@ -35,6 +49,10 @@ export interface Profile {
   totalCrystals: number
   crystalsSpent: number
   gamesPlayed: number
+  /** Анонимный серверный id (Этап 6). Зеркалим сюда, чтобы пережил очистку LS. */
+  playerId?: string
+  /** Отображаемый ник (Этап 6). Тоже зеркалим — переживает очистку LS. */
+  name?: string
 }
 
 interface GameDb extends DBSchema {
@@ -129,10 +147,19 @@ export async function getProfile(): Promise<Profile> {
 export async function initStorage(): Promise<{ persisted: boolean; profile: Profile }> {
   const persisted = await requestPersistence()
   const stored = await getProfile()
+  // Идентичность (Этап 6): если LS очищен, но IDB помнит playerId — восстанавливаем его
+  // ДО генерации нового, иначе игрок потерял бы серверный профиль. Затем гарантируем id.
+  if (!getPlayerId() && stored.playerId) setPlayerId(stored.playerId)
+  const playerId = ensurePlayerId()
+  // Ник: если LS очищен, но IDB помнит имя — восстанавливаем для показа (флаг custom мог
+  // потеряться, но синк всё равно пришлёт авторитетное имя с сервера).
+  if (!getDisplayName() && stored.name) adoptServerName(stored.name)
   const merged: Profile = {
     ...stored,
     bestHeight: Math.max(stored.bestHeight, getBestHeight()),
     totalCrystals: Math.max(stored.totalCrystals, getCrystalTotal()),
+    playerId,
+    name: getDisplayName() || stored.name,
   }
   // Зеркало вперёд: LS видит то, что уцелело в IDB (и наоборот).
   setBestHeight(merged.bestHeight)
@@ -160,6 +187,8 @@ export async function recordSession(run: {
   epoch: number
   boostersUsed: string[]
   walletTotal: number
+  durationMs?: number
+  jumps?: number
 }): Promise<void> {
   const session: GameSession = {
     id: uuid(),
@@ -169,6 +198,8 @@ export async function recordSession(run: {
     boostersUsed: run.boostersUsed,
     timestamp: Date.now(),
     synced: false,
+    durationMs: run.durationMs,
+    jumps: run.jumps,
   }
   try {
     const db = await getDb()
@@ -192,6 +223,42 @@ export async function recordSession(run: {
   } catch {
     /* журнал — не критичный путь: рекорд и кошелёк уже в LS-зеркале */
   }
+}
+
+/** Пометить партии синхронизированными после успешного синка (Этап 6). */
+export async function markSessionsSynced(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  try {
+    const db = await getDb()
+    if (!db) return
+    const tx = db.transaction('sessions', 'readwrite')
+    for (const id of ids) {
+      const s = await tx.store.get(id)
+      if (s && !s.synced) await tx.store.put({ ...s, synced: true })
+    }
+    await tx.done
+  } catch {
+    /* журнал не критичен: не пометилось — просто отправим ещё раз, дедуп по UUID на сервере */
+  }
+}
+
+/**
+ * Свести локальный прогресс с авторитетным серверным профилем (Этап 6, синк).
+ * Рекорд и кошелёк — по максимуму (конспект 4.5): сервер мог знать больше (другое
+ * устройство), локаль могла уйти вперёд (свежий забег ещё не синкнут). Возвращает
+ * сведённые значения, чтобы вызывающий обновил живой UI.
+ */
+export async function applyServerProfile(server: {
+  bestHeight: number
+  totalCrystals: number
+}): Promise<{ bestHeight: number; totalCrystals: number }> {
+  const bestHeight = Math.max(getBestHeight(), Math.floor(server.bestHeight) || 0)
+  const totalCrystals = Math.max(getCrystalTotal(), Math.floor(server.totalCrystals) || 0)
+  setBestHeight(bestHeight)
+  setCrystalTotal(totalCrystals)
+  const stored = await getProfile()
+  await putProfile({ ...stored, bestHeight, totalCrystals, name: getDisplayName() || stored.name })
+  return { bestHeight, totalCrystals }
 }
 
 /** Партии, ещё не уехавшие на бэкенд (Этап 6: синк по связи, дедуп по id). */

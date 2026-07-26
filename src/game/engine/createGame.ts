@@ -17,6 +17,7 @@ import { createPauseMenu } from '../controls/pauseMenu'
 import { createGameOver } from '../../features/gameOver/gameOver'
 import { getBestHeight, setBestHeight, getCrystalTotal, setCrystalTotal } from '../../shared/storage/local'
 import { recordSession } from '../../shared/storage/db'
+import { syncNow } from '../../shared/net/sync'
 import { audio } from '../../shared/audio/audioManager'
 import { haptics } from '../../shared/audio/haptics'
 
@@ -246,6 +247,10 @@ export async function createGame(
   const boostersUsed: string[] = [] // типы подобранных бустеров за партию — в журнал IndexedDB
   let crystalCombo = 0 // цепочка кристаллов: растит высоту звука (арпеджио)
   let crystalComboCd = 0 // сек до сброса комбо (пауза между сборами рвёт цепочку)
+  // (Этап 6, anti-cheat) журнал партии: старт и число прыжков — сервер по ним оценивает
+  // физическую возможность высоты (скороподъёмность ≤ пик прыжка; высота ≤ прыжки × апекс).
+  let runStartMs = 0
+  let jumps = 0
 
   const { radius: r } = balance.player
   const { maxHorizontalSpeed, horizontalDampingPerSec } = balance.physics
@@ -269,6 +274,8 @@ export async function createGame(
     cameraOffset = h * balance.camera.followRatio
     minY = 0
     crystalsThisRun = 0
+    runStartMs = performance.now()
+    jumps = 0
     // Рекорд на начало партии — свежий с диска: профиль мог восстановиться из IDB уже
     // после создания игры (иначе Game Over соврал бы «рекорд побит»).
     bestHeight = Math.max(bestHeight, getBestHeight())
@@ -348,14 +355,17 @@ export async function createGame(
     if (beaten) bestHeight = heightMeters // рекорд для СЛЕДУЮЩЕЙ партии
     // Кошелёк уже в crystalTotal (пишем на каждый пикап); дублируем в LS на смерть — надёжнее.
     setCrystalTotal(crystalTotal)
-    // Партия уходит в журнал IndexedDB (Этап 5): переживает вкладку и уедет в синк на Этапе 6.
+    // Партия уходит в журнал IndexedDB (Этап 5): переживает вкладку. Затем — синк на бэкенд
+    // (Этап 6): если онлайн, свежий забег уезжает сразу; офлайн — отложится до триггера.
     void recordSession({
       height: heightMeters,
       crystals: crystalsThisRun,
       epoch: epochs.current,
       boostersUsed,
       walletTotal: crystalTotal,
-    })
+      durationMs: Math.round(performance.now() - runStartMs),
+      jumps,
+    }).then(() => syncNow(true))
     gameOver.show({
       height: heightMeters,
       best: bestHeight,
@@ -426,6 +436,7 @@ export async function createGame(
           }
           player.y = top - r
           player.vy = -jumpVel // автопрыжок
+          jumps++ // (Этап 6 anti-cheat) счётчик прыжков за партию
           if (p.type === 'rrl' && p.collapseTimer < 0) {
             p.collapseTimer = balance.platforms.types.rrl.collapseMs / 1000 // старт разрушения
             audio.jumpRrl() // отскок
@@ -633,6 +644,7 @@ export async function createGame(
         rescueCharges--
         player.y = h - r - cameraOffset // возвращаем на нижний край
         player.vy = -jumpVel * balance.boosters.rescueBounceFactor // мощный отскок вверх
+        jumps++ // (Этап 6 anti-cheat) батут-спасение тоже прыжок
         controlLockSec = 0
         audio.rescue()
         haptics.hit()
@@ -701,6 +713,8 @@ export async function createGame(
       cameraOffset: Math.round(cameraOffset),
       platforms: spawner.platforms.length,
       height: Math.floor(-minY / balance.score.pxPerMeter),
+      jumps,
+      runMs: Math.round(performance.now() - runStartMs),
       crystalTotal,
       crystalsOnField: crystals.crystals.length,
       epoch: epochs.current,
