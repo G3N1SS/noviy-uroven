@@ -21,6 +21,7 @@ export type Screen =
   | 'rules'
   | 'shop'
   | 'leaderboard'
+  | 'developers'
   | 'playing'
 
 interface UiState {
@@ -45,6 +46,7 @@ interface UiState {
   openRules: () => void
   openShop: () => void
   openLeaderboard: () => void
+  openDevelopers: () => void
   backToMenu: () => void
 }
 
@@ -79,6 +81,7 @@ export const useUi = create<UiState>((set, get) => ({
   openRules: () => set({ screen: 'rules' }),
   openShop: () => set({ screen: 'shop' }),
   openLeaderboard: () => set({ screen: 'leaderboard' }),
+  openDevelopers: () => set({ screen: 'developers' }),
   backToMenu: () => set({ screen: 'menu' }),
 }))
 

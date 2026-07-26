@@ -16,12 +16,14 @@ const ICON: Record<string, JSX.Element> = {
   ),
   trophy: <path d="M7 4h10v5a5 5 0 0 1-10 0V4Zm0 2H4v1a3 3 0 0 0 3 3m10-4h3v1a3 3 0 0 1-3 3M9 18h6m-3-4v4" />,
   help: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-2 6a2 2 0 1 1 3 1.7c-.7.5-1 .8-1 1.8m0 3v0" />,
+  devs: <path d="M8 6l-6 6 6 6M16 6l6 6-6 6" />,
 }
 const NAV: Array<{ key: string; label: string }> = [
   { key: 'store', label: 'Магазин' },
   { key: 'trophy', label: 'Лидерборд' },
   { key: 'settings', label: 'Настройки' },
   { key: 'help', label: 'Правила' },
+  { key: 'devs', label: 'Разработчики' },
 ]
 
 export function MainMenu() {
@@ -34,6 +36,7 @@ export function MainMenu() {
   const openRules = useUi((s) => s.openRules)
   const openShop = useUi((s) => s.openShop)
   const openLeaderboard = useUi((s) => s.openLeaderboard)
+  const openDevelopers = useUi((s) => s.openDevelopers)
   // Полная интро один раз (первый показ меню); возврат из игры/настроек → лёгкий фейд.
   // Флаг в сторе (переживает двойной монтаж StrictMode и remount при навигации).
   const [entrance, setEntrance] = useState<'intro' | 'enter' | null>(
@@ -132,7 +135,9 @@ export function MainMenu() {
                     ? openShop()
                     : n.key === 'trophy'
                       ? openLeaderboard()
-                      : soon(n.label)
+                      : n.key === 'devs'
+                        ? openDevelopers()
+                        : soon(n.label)
             }
           >
             {n.key === 'settings' ? (

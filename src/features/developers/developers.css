@@ -1,0 +1,133 @@
+/**
+ * Экран «Разработчики» (блок `devs` по БЭМ). Фирстиль T2: Ч/Б текст, магента — только
+ * акцент бейджа-инициала. Бенто-карточки, токены :root.
+ */
+
+.devs {
+  position: fixed;
+  inset: 0;
+  z-index: 32;
+  display: flex;
+  flex-direction: column;
+  padding: calc(14px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: var(--t2-black);
+  font-family: 'Manrope', system-ui, sans-serif;
+  overflow-y: auto;
+  animation: devs-in 0.28s ease both;
+}
+
+@keyframes devs-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.devs__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.devs__back {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--t2-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease;
+}
+.devs__back:active {
+  transform: scale(0.94);
+}
+
+.devs__title {
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--t2-white);
+  margin: 0;
+}
+
+.devs__intro {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 2px 16px;
+}
+
+.devs__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.devs__card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.12s ease,
+    background 0.14s ease;
+}
+.devs__card:active {
+  transform: scale(0.98);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.devs__badge {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: var(--t2-magenta);
+  color: var(--t2-black);
+  font-weight: 800;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.devs__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.devs__name {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--t2-white);
+}
+
+.devs__handle {
+  font-weight: 700;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.devs__tg {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.4);
+}
