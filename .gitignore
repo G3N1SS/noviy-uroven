@@ -23,3 +23,6 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+
+# Локальная pglite-БД для dev-функций (Этап 6)
+.pglite/

@@ -1,10 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { viteDevApi } from './dev/viteDevApi'
 
 // host: true — чтобы открывать превью с телефона по локальной сети (game feel тюним на устройстве)
 export default defineConfig({
   plugins: [
+    // Локальный /api на pglite (Этап 6): синк работает в dev и на телефоне по LAN без прод-БД.
+    viteDevApi(),
     react(),
     // PWA (Этап 5, конспект 4.5): первый заход онлайн → всё в precache → игра работает
     // в авиарежиме. Ассетов у проекта почти нет (графика и звук процедурные), поэтому
