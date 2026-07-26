@@ -1,4 +1,4 @@
-import type { Db } from './db'
+import type { Db } from './db.js'
 
 /**
  * Лидерборд (Этап 6, конспект 4.6 / ТЗ 3.5). Рейтинг считается из таблицы `sessions`

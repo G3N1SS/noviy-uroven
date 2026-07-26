@@ -1,6 +1,6 @@
-import type { Db } from './db'
-import { getOrCreatePlayer, setPlayerName, type Profile } from './players'
-import { validateRun, RATE_MAX_PER_MIN } from './anticheat'
+import type { Db } from './db.js'
+import { getOrCreatePlayer, setPlayerName, type Profile } from './players.js'
+import { validateRun, RATE_MAX_PER_MIN } from './anticheat.js'
 
 /**
  * Синк партий (Этап 6, конспект 4.6: «POST /api/sessions/sync — батч с дедупликацией по UUID»).

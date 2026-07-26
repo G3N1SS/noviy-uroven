@@ -1,6 +1,6 @@
-import { getDb } from './_lib/db'
-import { getLeaderboard, type Period, type Scope } from './_lib/leaderboard'
-import { json, query, requireMethod, withErrors } from './_lib/http'
+import { getDb } from './_lib/db.js'
+import { getLeaderboard, type Period, type Scope } from './_lib/leaderboard.js'
+import { json, query, requireMethod, withErrors } from './_lib/http.js'
 
 /**
  * GET /api/leaderboard — топ-100 (конспект 4.6). Параметры:

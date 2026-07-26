@@ -1,4 +1,4 @@
-import { SCHEMA_SQL } from './schema'
+import { SCHEMA_SQL } from './schema.js'
 
 /**
  * Слой доступа к БД (Этап 6). Один интерфейс `Db` над двумя драйверами — тот же SQL,

@@ -1,4 +1,4 @@
-import type { Db } from './db'
+import type { Db } from './db.js'
 
 /**
  * OTA-конфиг баланса (Этап 6, конспект 4.6: «GET /api/config — balance.json с сервера»).

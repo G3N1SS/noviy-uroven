@@ -1,6 +1,6 @@
-import { getDb } from '../_lib/db'
-import { syncSessions } from '../_lib/sessions'
-import { body, json, requireMethod, withErrors } from '../_lib/http'
+import { getDb } from '../_lib/db.js'
+import { syncSessions } from '../_lib/sessions.js'
+import { body, json, requireMethod, withErrors } from '../_lib/http.js'
 
 /**
  * POST /api/sessions/sync — батч партий игрока с дедупликацией по UUID (конспект 4.6).

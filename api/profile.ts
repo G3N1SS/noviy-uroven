@@ -1,6 +1,6 @@
-import { getDb } from './_lib/db'
-import { getProfile, setPlayerName } from './_lib/players'
-import { body, json, query, requireMethod, withErrors } from './_lib/http'
+import { getDb } from './_lib/db.js'
+import { getProfile, setPlayerName } from './_lib/players.js'
+import { body, json, query, requireMethod, withErrors } from './_lib/http.js'
 
 /**
  * /api/profile — профиль и баланс кристаллов (конспект 4.6).

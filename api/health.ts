@@ -19,7 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.query.db) {
     const started = Date.now()
     try {
-      const { getDb } = await import('./_lib/db')
+      const { getDb } = await import('./_lib/db.js')
       const db = await getDb()
       const rows = await db.query<{ one: number }>('SELECT 1 AS one')
       out.db = { ok: true, rows, ms: Date.now() - started }

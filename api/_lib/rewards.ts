@@ -1,12 +1,12 @@
-import type { Db } from './db'
-import { getOrCreatePlayer, getProfile, type Profile } from './players'
-import balanceJson from '../../src/game/config/balance.json'
+import type { Db } from './db.js'
+import { getOrCreatePlayer, getProfile, type Profile } from './players.js'
+import { REWARD_CATALOG, type RewardDef } from './rewardsCatalog.js'
 
 /**
  * Обмен кристаллов на награду (Этап 6, конспект 4.6: «POST /api/rewards/redeem»).
  *
- * Цены — АВТОРИТЕТНО с сервера (из balance.json, единый источник правды): клиент не может
- * назначить свою цену. Списание атомарно и идемпотентно ОДНИМ SQL-запросом (CTE), без
+ * Цены — АВТОРИТЕТНО с сервера (каталог `rewardsCatalog.ts`, зеркалит balance.json): клиент
+ * не может назначить свою цену. Списание атомарно и идемпотентно ОДНИМ SQL-запросом (CTE), без
  * мультистейтмент-транзакции — то же работает и на Neon HTTP:
  *  - `redemptionId` (UUID с клиента) — ключ идемпотентности: повтор не спишет второй раз
  *    (`ON CONFLICT DO NOTHING`).
@@ -16,15 +16,7 @@ import balanceJson from '../../src/game/config/balance.json'
  * и запись факта обмена; на Этапе 7 redemptions станут очередью на начисление.
  */
 
-interface RewardDef {
-  id: string
-  title: string
-  price: number
-}
-
-const REWARDS: Map<string, RewardDef> = new Map(
-  balanceJson.economy.rewards.map((r) => [r.id, { id: r.id, title: r.title, price: r.price }]),
-)
+const REWARDS: Map<string, RewardDef> = new Map(REWARD_CATALOG.map((r) => [r.id, r]))
 
 export function getReward(id: string): RewardDef | null {
   return REWARDS.get(id) ?? null

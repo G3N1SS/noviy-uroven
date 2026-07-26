@@ -1,6 +1,6 @@
-import { getDb } from '../_lib/db'
-import { redeem } from '../_lib/rewards'
-import { body, json, requireMethod, withErrors } from '../_lib/http'
+import { getDb } from '../_lib/db.js'
+import { redeem } from '../_lib/rewards.js'
+import { body, json, requireMethod, withErrors } from '../_lib/http.js'
 
 /**
  * POST /api/rewards/redeem — обмен кристаллов на награду (конспект 4.6).

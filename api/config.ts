@@ -1,7 +1,7 @@
 import type { VercelRequest } from '@vercel/node'
-import { getDb } from './_lib/db'
-import { getServerConfig, setServerConfig } from './_lib/config'
-import { body, json, requireMethod, withErrors } from './_lib/http'
+import { getDb } from './_lib/db.js'
+import { getServerConfig, setServerConfig } from './_lib/config.js'
+import { body, json, requireMethod, withErrors } from './_lib/http.js'
 
 /**
  * /api/config — OTA-конфиг баланса (конспект 4.6: «баланс меняется с сервера без релиза»).
