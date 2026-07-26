@@ -16,19 +16,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     node: process.version,
   }
 
+  // Чек связи с БД: возвращаем только ok/ms — без стека (не светим внутренние пути наружу).
   if (req.query.db) {
     const started = Date.now()
     try {
       const { getDb } = await import('./_lib/db.js')
       const db = await getDb()
-      const rows = await db.query<{ one: number }>('SELECT 1 AS one')
-      out.db = { ok: true, rows, ms: Date.now() - started }
-    } catch (e) {
-      out.db = {
-        ok: false,
-        ms: Date.now() - started,
-        error: e instanceof Error ? (e.stack ?? e.message) : String(e),
-      }
+      await db.query('SELECT 1 AS one')
+      out.db = { ok: true, ms: Date.now() - started }
+    } catch {
+      out.db = { ok: false, ms: Date.now() - started }
     }
   }
 
