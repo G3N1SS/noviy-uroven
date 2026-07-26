@@ -1,0 +1,139 @@
+/**
+ * Шторка установки на iOS (блок `ish` по БЭМ). Выезжает снизу поверх меню. Фирстиль T2:
+ * Ч/Б текст, магента — акцент номеров шагов. Токены :root.
+ */
+
+.ish {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: ish-fade 0.2s ease both;
+}
+
+@keyframes ish-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ish__panel {
+  background: var(--t2-black);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px 22px 0 0;
+  padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  font-family: 'Manrope', system-ui, sans-serif;
+  animation: ish-up 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes ish-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.ish__grip {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 0 auto 16px;
+}
+
+.ish__title {
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--t2-white);
+  margin: 0 0 6px;
+}
+
+.ish__sub {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 18px;
+}
+
+.ish__steps {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ish__step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ish__num {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--t2-magenta);
+  color: var(--t2-black);
+  font-weight: 800;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ish__text {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--t2-white);
+}
+.ish__text b {
+  font-weight: 800;
+}
+
+/* Инлайн-глиф «Поделиться» внутри строки шага */
+.ish__share {
+  display: inline-flex;
+  vertical-align: middle;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin: 0 3px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--t2-white);
+}
+
+.ish__ok {
+  width: 100%;
+  padding: 14px 0;
+  border: none;
+  border-radius: 14px;
+  background: var(--t2-magenta);
+  color: var(--t2-black);
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease;
+}
+.ish__ok:active {
+  transform: scale(0.98);
+}

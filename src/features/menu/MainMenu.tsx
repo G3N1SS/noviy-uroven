@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import './mainMenu.css'
 import { useUi } from '../../shared/store/ui'
 import { getBestHeight, getCrystalTotal } from '../../shared/storage/local'
-import { onInstallAvailability, promptInstall } from '../../pwa/install'
+import { onInstallAvailability, promptInstall, canShowIosHint } from '../../pwa/install'
+import { IosInstallSheet } from '../../pwa/IosInstallSheet'
 
 /**
  * Главное меню (Этап 3, вариант H). Показывается на старте и по выходу из игры.
@@ -43,10 +44,14 @@ export function MainMenu() {
     useUi.getState().menuIntroDone ? 'enter' : 'intro',
   )
   const hintTimer = useRef<number>()
-  // Кнопка установки — только если браузер реально готов установить (Chrome/Android
-  // прислал beforeinstallprompt). На iOS события нет → кнопки нет, вместо вранья молчим.
+  // Кнопка установки. Android/Chrome: системный диалог (beforeinstallprompt). iOS: API нет,
+  // поэтому кнопка открывает шторку-инструкцию (Поделиться → На экран «Домой»).
   const [canInstall, setCanInstall] = useState(false)
+  const [iosSheet, setIosSheet] = useState(false)
+  const iosHint = canShowIosHint()
   useEffect(() => onInstallAvailability(setCanInstall), [])
+  const showInstall = canInstall || iosHint
+  const onInstallClick = () => (canInstall ? void promptInstall() : setIosSheet(true))
 
   // Снимаем класс входа после проигрыша — чтобы `animation` не конфликтовал с
   // transition'ами запуска (PLAY трогают обе фазы). После интро помечаем его сыгранным.
@@ -167,11 +172,13 @@ export function MainMenu() {
         ))}
       </nav>
 
-      {canInstall && (
-        <button className="menu__install" onClick={() => void promptInstall()}>
+      {showInstall && (
+        <button className="menu__install" onClick={onInstallClick}>
           Поставить на домашний экран
         </button>
       )}
+
+      {iosSheet && <IosInstallSheet onClose={() => setIosSheet(false)} />}
 
       <div className={`menu__hint${hint ? ' menu__hint--show' : ''}`}>{hint}</div>
 

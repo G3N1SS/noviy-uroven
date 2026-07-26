@@ -38,6 +38,31 @@ export function canInstall(): boolean {
   return deferred !== null
 }
 
+/** iOS-устройство (iPhone/iPad/iPod, включая iPadOS, маскирующийся под Mac). */
+function isIos(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent
+  if (/iP(hone|ad|od)/.test(ua)) return true
+  // iPadOS 13+ отдаёт UA как Mac — ловим по тач-точкам.
+  return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
+}
+
+/** Приложение уже запущено с домашнего экрана (standalone) — установка не нужна. */
+function isStandalone(): boolean {
+  if (typeof window === 'undefined') return false
+  const iosStandalone = (navigator as unknown as { standalone?: boolean }).standalone === true
+  return iosStandalone || window.matchMedia('(display-mode: standalone)').matches
+}
+
+/**
+ * На iOS нет API установки (Safari не шлёт beforeinstallprompt) — ставят вручную через
+ * «Поделиться → На экран „Домой"». Поэтому вместо системного диалога показываем свою
+ * кнопку с инструкцией-шторкой. true — если это iOS и игра ещё не установлена.
+ */
+export function canShowIosHint(): boolean {
+  return isIos() && !isStandalone()
+}
+
 /** Подписка на появление/исчезновение возможности установить. Возвращает отписку. */
 export function onInstallAvailability(cb: (can: boolean) => void): () => void {
   listeners.add(cb)
