@@ -63,6 +63,9 @@
 .menu--intro .menu__nav-btn:nth-child(4) {
   animation-delay: 0.77s;
 }
+.menu--intro .menu__nav-btn:nth-child(5) {
+  animation-delay: 0.84s;
+}
 
 @keyframes intro-fade {
   from {
