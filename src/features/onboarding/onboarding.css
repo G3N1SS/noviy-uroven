@@ -26,25 +26,35 @@
   font-size: 26px;
   line-height: 1.1;
   color: var(--t2-white);
-  margin: 0;
+  margin: 0 0 22px;
   animation: onb-fade 0.5s ease 0.05s both;
+}
+
+/* Заголовок секции управления — меньше героя, отделяет ник от выбора схемы. */
+.onb__section {
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1.15;
+  color: var(--t2-white);
+  margin: 0;
+  animation: onb-fade 0.5s ease 0.24s both;
 }
 
 .onb__sub {
   font-size: 13px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.5);
-  margin: 10px 0 22px;
-  animation: onb-fade 0.5s ease 0.15s both;
+  margin: 8px 0 22px;
+  animation: onb-fade 0.5s ease 0.3s both;
 }
 
 /* Поле ника — сразу на старте (необязательное). */
 .onb__nick {
   width: 100%;
   max-width: 420px;
-  margin-bottom: 22px;
+  margin-bottom: 26px;
   text-align: left;
-  animation: onb-fade 0.5s ease 0.2s both;
+  animation: onb-fade 0.5s ease 0.15s both;
 }
 
 .onb__nick-label {
@@ -115,10 +125,10 @@
 }
 
 .onb__card:nth-child(1) {
-  animation-delay: 0.24s;
+  animation-delay: 0.38s;
 }
 .onb__card:nth-child(2) {
-  animation-delay: 0.32s;
+  animation-delay: 0.46s;
 }
 
 .onb__card:active {

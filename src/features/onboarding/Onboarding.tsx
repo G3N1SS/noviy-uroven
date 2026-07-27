@@ -63,8 +63,7 @@ export function Onboarding() {
 
   return (
     <div className="onb">
-      <h1 className="onb__title">Как удобнее играть?</h1>
-      <p className="onb__sub">Поменять можно в любой момент на паузе</p>
+      <h1 className="onb__title">Почти готов</h1>
 
       <div className="onb__nick">
         <label className="onb__nick-label" htmlFor="onb-nick">
@@ -83,6 +82,9 @@ export function Onboarding() {
         />
         <span className="onb__nick-hint">Так тебя увидят в лидерборде. Можно потом.</span>
       </div>
+
+      <h2 className="onb__section">Как удобнее играть?</h2>
+      <p className="onb__sub">Поменять можно в любой момент на паузе</p>
 
       <div className="onb__cards">
         {CARDS.map((c) => (
