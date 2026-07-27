@@ -34,8 +34,57 @@
   font-size: 13px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.5);
-  margin: 10px 0 28px;
+  margin: 10px 0 22px;
   animation: onb-fade 0.5s ease 0.15s both;
+}
+
+/* Поле ника — сразу на старте (необязательное). */
+.onb__nick {
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 22px;
+  text-align: left;
+  animation: onb-fade 0.5s ease 0.2s both;
+}
+
+.onb__nick-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 8px;
+}
+
+.onb__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--t2-white);
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color 0.14s ease;
+}
+.onb__input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+}
+.onb__input:focus {
+  border-color: var(--t2-magenta);
+}
+
+.onb__nick-hint {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 8px;
 }
 
 .onb__cards {

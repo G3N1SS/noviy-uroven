@@ -2,6 +2,11 @@ import { useState } from 'react'
 import './onboarding.css'
 import { useUi } from '../../shared/store/ui'
 import type { ControlMode } from '../../game/controls/types'
+import { getDisplayName, setCustomName } from '../../shared/storage/local'
+import { sanitizeName, NAME_MAX } from '../../shared/net/name'
+import { ensurePlayerId } from '../../shared/net/identity'
+import { updateName } from '../../shared/net/api'
+import { syncNow } from '../../shared/net/sync'
 
 /**
  * Онбординг выбора управления (ТЗ 3.5): «Как удобнее играть?» → 2 карточки → в меню.
@@ -31,11 +36,23 @@ export function Onboarding() {
   const ready = useUi((s) => s.controls !== null)
   const [busy, setBusy] = useState<ControlMode | null>(null)
   const [denied, setDenied] = useState(false)
+  const [nick, setNick] = useState(getDisplayName)
+
+  // Ник (необязательный): сохраняем локально + шлём на сервер перед переходом в меню.
+  // Пусто/коротко — пропускаем, игрок получит дефолтный «Сигнал XXXX».
+  const saveNick = () => {
+    const clean = sanitizeName(nick)
+    if (!clean || clean === getDisplayName()) return
+    setCustomName(clean)
+    if (navigator.onLine !== false) void updateName(ensurePlayerId(), clean).catch(() => {})
+    void syncNow(true)
+  }
 
   const choose = async (mode: ControlMode) => {
     if (!ready || busy) return
     setBusy(mode)
     setDenied(false)
+    saveNick() // зафиксировать ник до перехода
     const ok = await chooseControl(mode)
     // ok → стор переключил экран на 'menu' → Onboarding размонтируется.
     if (!ok) {
@@ -48,6 +65,24 @@ export function Onboarding() {
     <div className="onb">
       <h1 className="onb__title">Как удобнее играть?</h1>
       <p className="onb__sub">Поменять можно в любой момент на паузе</p>
+
+      <div className="onb__nick">
+        <label className="onb__nick-label" htmlFor="onb-nick">
+          ТВОЙ НИКНЕЙМ
+        </label>
+        <input
+          id="onb-nick"
+          className="onb__input"
+          type="text"
+          inputMode="text"
+          maxLength={NAME_MAX}
+          placeholder="Например, Гроза Эфира"
+          value={nick}
+          onChange={(e) => setNick(e.target.value)}
+          aria-label="Никнейм"
+        />
+        <span className="onb__nick-hint">Так тебя увидят в лидерборде. Можно потом.</span>
+      </div>
 
       <div className="onb__cards">
         {CARDS.map((c) => (
