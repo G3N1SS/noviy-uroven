@@ -46,7 +46,7 @@ test.describe('Офлайн (PWA)', () => {
     await page.reload()
 
     // Оболочка поднялась: канвас Pixi на месте, заголовок наш.
-    await expect(page).toHaveTitle('Новый уровень')
+    await expect(page).toHaveTitle('Ставьте рекорды с T2')
     await expect(page.locator('canvas')).toBeVisible()
 
     // Доходим до игры. Канвас висит на экране с самого старта (игра ждёт на паузе),

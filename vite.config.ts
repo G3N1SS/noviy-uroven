@@ -16,9 +16,9 @@ export default defineConfig({
       registerType: 'prompt', // не обновляемся молча: по DoD новая версия предлагается тостом
       includeAssets: ['icons/apple-touch-icon.png'],
       manifest: {
-        name: 'Новый уровень',
-        short_name: 'Новый уровень',
-        description: 'Другие правила. Новый уровень.',
+        name: 'Ставьте рекорды с T2',
+        short_name: 'Рекорды T2',
+        description: 'Ставьте рекорды с T2. Другие правила.',
         lang: 'ru',
         start_url: '/',
         scope: '/',

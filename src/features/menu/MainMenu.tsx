@@ -95,9 +95,11 @@ export function MainMenu() {
       <div className="menu__top">
         <div>
           <h1 className="menu__title">
-            НОВЫЙ
+            СТАВЬТЕ
             <br />
-            УРОВЕНЬ
+            РЕКОРДЫ
+            <br />
+            С T2
           </h1>
           <div className="menu__tagline">ДРУГИЕ ПРАВИЛА</div>
         </div>
