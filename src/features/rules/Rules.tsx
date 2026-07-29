@@ -2,8 +2,8 @@ import './rules.css'
 import { useUi } from '../../shared/store/ui'
 
 /**
- * Экран правил (ТЗ 3.5). Коротко и дерзко (2.13): цель, вышки, бустеры, опасности,
- * кристаллы, эпохи — по одной строке с глифом. Без длинных туториалов.
+ * Экран правил (ТЗ 3.5). Коротко и дерзко (2.13): цель, объекты сети, бустеры,
+ * опасности, кристаллы, эпохи — по одной строке с глифом. Без длинных туториалов.
  */
 export function Rules() {
   const backToMenu = useUi((s) => s.backToMenu)
@@ -20,7 +20,7 @@ export function Rules() {
       </div>
 
       <p className="rules__goal">
-        Прыгайте <b>вверх</b> по вышкам связи. Выше — круче. Упали за нижний край —
+        Прыгайте <b>вверх</b> по базовым станциям. Выше — круче. Упали вниз —
         начинаете сначала.
       </p>
 
@@ -34,64 +34,64 @@ export function Rules() {
           </span>
           <span className="rules__text">
             <span className="rules__row-title">Только влево-вправо</span>
-            <span className="rules__row-desc">Прыжок автоматический. Схему выбрали в настройках</span>
+            <span className="rules__row-desc">Прыжок автоматический. Выбор схемы доступен в настройках.</span>
           </span>
         </div>
       </div>
 
       <div className="rules__section">
-        <div className="rules__label">ВЫШКИ</div>
+        <div className="rules__label">ОБЪЕКТЫ СЕТИ</div>
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__bar rules__bar--vols" /></span>
           <span className="rules__text">
-            <span className="rules__row-title">ВОЛС</span>
-            <span className="rules__row-desc">Надёжная, вечная. Ваша опора</span>
+            <span className="rules__row-title">АМС 60 м</span>
+            <span className="rules__row-desc">Надежная, со стабильной сетью. Ваша опора.</span>
           </span>
         </div>
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__bar rules__bar--rrl" /></span>
           <span className="rules__text">
-            <span className="rules__row-title">РРЛ</span>
-            <span className="rules__row-desc">Развалится сразу после прыжка. Не задерживайтесь</span>
+            <span className="rules__row-title">Виртуальная сеть</span>
+            <span className="rules__row-desc">Исчезнет сразу после прыжка. Не задерживайтесь.</span>
           </span>
         </div>
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__bar rules__bar--moving" /></span>
           <span className="rules__text">
-            <span className="rules__row-title">Движущаяся</span>
-            <span className="rules__row-desc">Ездит по горизонтали. Ловите момент</span>
+            <span className="rules__row-title">Передвижная базовая станция</span>
+            <span className="rules__row-desc">Ездит по горизонтали. Ловите момент.</span>
           </span>
         </div>
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__bar rules__bar--fake" /></span>
           <span className="rules__text">
             <span className="rules__row-title">Фейк</span>
-            <span className="rules__row-desc">Притворяется ВОЛС и растворяется под ногами. Ловушка</span>
+            <span className="rules__row-desc">Притворяется АМС и растворяется под ногами. Ловушка.</span>
           </span>
         </div>
       </div>
 
       <div className="rules__section">
-        <div className="rules__label">БУСТЕРЫ = ПРОДУКТЫ T2</div>
+        <div className="rules__label">БУСТЕРЫ → ПРОДУКТЫ T2</div>
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__dot rules__dot--gigaback">×2</span></span>
           <span className="rules__text">
             <span className="rules__row-title">Гигабэк</span>
-            <span className="rules__row-desc">Удваивает кристаллы на 10 секунд</span>
+            <span className="rules__row-desc">Удваивает кристаллы на 10 секунд.</span>
           </span>
         </div>
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__dot rules__dot--shield" /></span>
           <span className="rules__text">
             <span className="rules__row-title">MiXX-щит</span>
-            <span className="rules__row-desc">Спасает от одного падения — подбросит вверх</span>
+            <span className="rules__row-desc">Дарит не только контент, но и одну жизнь — подбросит вверх при падении.</span>
           </span>
         </div>
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__dot rules__dot--safewall" /></span>
           <span className="rules__text">
             <span className="rules__row-title">SafeWall</span>
-            <span className="rules__row-desc">Иммунитет к помехам и подсветка фейков</span>
+            <span className="rules__row-desc">Иммунитет к помехам и подсветка фейков.</span>
           </span>
         </div>
       </div>
@@ -101,15 +101,15 @@ export function Rules() {
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__glitch" /></span>
           <span className="rules__text">
-            <span className="rules__row-title">Помеха</span>
-            <span className="rules__row-desc">Глитч-облако. Заденете — отбросит вниз и заглушит управление</span>
+            <span className="rules__row-title">Помеха сети</span>
+            <span className="rules__row-desc">Глитч-облако. Отбросит вниз и заглушит управление.</span>
           </span>
         </div>
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__diamond" /></span>
           <span className="rules__text">
             <span className="rules__row-title">Кристаллы</span>
-            <span className="rules__row-desc">Собирайте по пути. При смерти не сгорают</span>
+            <span className="rules__row-desc">Собирайте награды. Никогда не сгорают (как и остатки на тарифе).</span>
           </span>
         </div>
       </div>
