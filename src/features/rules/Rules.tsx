@@ -124,7 +124,7 @@ export function Rules() {
           </span>
           <span className="rules__text">
             <span className="rules__row-title">2G → 3G → LTE → 5G → Будущее</span>
-            <span className="rules__row-desc">Каждые сотни метров — новый мир и новый вайб</span>
+            <span className="rules__row-desc">Смена мира — на 500, 1500, 3000, 5000 метрах.</span>
           </span>
         </div>
       </div>
