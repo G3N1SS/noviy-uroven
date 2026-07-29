@@ -135,7 +135,7 @@ export function Settings() {
             type="text"
             inputMode="text"
             maxLength={NAME_MAX}
-            placeholder="Твой никнейм"
+            placeholder="Ваш никнейм"
             value={nick}
             onChange={(e) => {
               setNick(e.target.value)
@@ -151,7 +151,7 @@ export function Settings() {
           <p className={`set__hint set__hint--${hint.kind}`}>{hint.text}</p>
         )}
         {!hint && (
-          <p className="set__hint">Так тебя увидят в лидерборде</p>
+          <p className="set__hint">Так вас увидят в лидерборде</p>
         )}
       </div>
 

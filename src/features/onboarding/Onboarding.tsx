@@ -27,8 +27,8 @@ const SwipeIcon = (
 )
 
 const CARDS: Array<{ mode: ControlMode; label: string; desc: string; icon: JSX.Element }> = [
-  { mode: 'tilt', label: 'Наклон', desc: 'Наклоняй телефон влево-вправо', icon: TiltIcon },
-  { mode: 'follow', label: 'Свайп', desc: 'Веди пальцем по экрану', icon: SwipeIcon },
+  { mode: 'tilt', label: 'Наклон', desc: 'Наклоняйте телефон влево-вправо', icon: TiltIcon },
+  { mode: 'follow', label: 'Свайп', desc: 'Ведите пальцем по экрану', icon: SwipeIcon },
 ]
 
 export function Onboarding() {
@@ -63,11 +63,11 @@ export function Onboarding() {
 
   return (
     <div className="onb">
-      <h1 className="onb__title">Почти готов</h1>
+      <h1 className="onb__title">Почти готово</h1>
 
       <div className="onb__nick">
         <label className="onb__nick-label" htmlFor="onb-nick">
-          ТВОЙ НИКНЕЙМ
+          ВАШ НИКНЕЙМ
         </label>
         <input
           id="onb-nick"
@@ -80,7 +80,7 @@ export function Onboarding() {
           onChange={(e) => setNick(e.target.value)}
           aria-label="Никнейм"
         />
-        <span className="onb__nick-hint">Так тебя увидят в лидерборде. Можно потом.</span>
+        <span className="onb__nick-hint">Так вас увидят в лидерборде. Можно потом.</span>
       </div>
 
       <h2 className="onb__section">Как удобнее играть?</h2>
@@ -102,7 +102,7 @@ export function Onboarding() {
       </div>
 
       <div className={`onb__hint${denied ? ' onb__hint--show' : ''}`}>
-        Нужен доступ к датчику движения. Выбери «Свайп» или разреши в настройках
+        Нужен доступ к датчику движения. Выберите «Свайп» или разрешите в настройках
       </div>
     </div>
   )

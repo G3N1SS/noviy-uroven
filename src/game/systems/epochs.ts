@@ -89,9 +89,9 @@ export class EpochManager {
     const e = this.epochFor(heightMeters)
     switch (e.id) {
       case 1:
-        return 'Застрял на 2G. Даже обидно'
+        return 'Застряли на 2G. Даже обидно'
       case 2:
-        return 'Застрял на 3G. Даже обидно'
+        return 'Застряли на 3G. Даже обидно'
       case 3:
         return 'LTE и стоп. Бывает'
       case 4:

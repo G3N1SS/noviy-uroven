@@ -68,7 +68,7 @@ export function IosInstallSheet({ onClose }: { onClose: () => void }) {
           <li className="ish__step">
             <span className="ish__num">1</span>
             <span className="ish__text">
-              Нажми
+              Нажмите
               <span className="ish__share" aria-hidden="true">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 15V3m0 0l-4 4m4-4l4 4" />
@@ -81,13 +81,13 @@ export function IosInstallSheet({ onClose }: { onClose: () => void }) {
           <li className="ish__step">
             <span className="ish__num">2</span>
             <span className="ish__text">
-              Пролистай и выбери <b>«На экран „Домой"»</b>
+              Пролистайте и выберите <b>«На экран „Домой"»</b>
             </span>
           </li>
           <li className="ish__step">
             <span className="ish__num">3</span>
             <span className="ish__text">
-              Нажми <b>«Добавить»</b> — готово
+              Нажмите <b>«Добавить»</b> — готово
             </span>
           </li>
         </ol>

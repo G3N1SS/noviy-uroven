@@ -33,7 +33,7 @@ export function Leaderboard() {
   const [data, setData] = useState<LeaderboardResult | null>(null)
 
   const playerId = ensurePlayerId()
-  const displayName = getDisplayName() || 'Ты'
+  const displayName = getDisplayName() || 'Вы'
   const localBest = getBestHeight()
 
   useEffect(() => {
@@ -97,9 +97,9 @@ export function Leaderboard() {
         </div>
       )}
 
-      {/* Карточка «ТЫ»: ник + позиция + рекорд периода (офлайн — локальный рекорд) */}
+      {/* Карточка «ВЫ»: ник + позиция + рекорд периода (офлайн — локальный рекорд) */}
       <div className="lb__card--you">
-        <div className="lb__you-badge">{myRank ? `#${myRank}` : 'ТЫ'}</div>
+        <div className="lb__you-badge">{myRank ? `#${myRank}` : 'ВЫ'}</div>
         <div className="lb__you-main">
           <div className="lb__you-nick">{displayName}</div>
           <div className="lb__height">
@@ -142,7 +142,7 @@ function LeaderboardBody({
     return (
       <Placeholder
         title="Нет сети"
-        desc="Топ подтянется, как появится связь. Твой рекорд уже сохранён и уедет в зачёт."
+        desc="Топ подтянется, как появится связь. Ваш рекорд уже сохранён и уедет в зачёт."
         status={`Локальный рекорд: ${localBest} м`}
         pulse
       />
@@ -153,7 +153,7 @@ function LeaderboardBody({
     return (
       <Placeholder
         title="Друзья — скоро"
-        desc="Подключим, когда войдёшь по номеру T2. Тогда увидишь, кто из своих выше."
+        desc="Подключим, когда войдёте по номеру T2. Тогда увидите, кто из своих выше."
         status="Ждёт входа T2"
         pulse
       />
@@ -176,8 +176,8 @@ function LeaderboardBody({
     return (
       <Placeholder
         title="Пока пусто"
-        desc="Топ этой недели ещё не собран. Сыграй — и займёшь первую строчку."
-        status="Будь первым"
+        desc="Топ этой недели ещё не собран. Сыграйте — и займёте первую строчку."
+        status="Будьте первым"
       />
     )
   }

@@ -104,7 +104,7 @@
     { "id": 2, "name": "3G", "fromMeters": 500, "toMeters": 1500, "bg": "#04101e", "banner": "3G. Уже что-то" },
     { "id": 3, "name": "LTE", "fromMeters": 1500, "toMeters": 3000, "bg": "#120818", "banner": "LTE достигнут. Можно ускоряться" },
     { "id": 4, "name": "5G", "fromMeters": 3000, "toMeters": 5000, "bg": "#1c0512", "banner": "5G. Почти космос" },
-    { "id": 5, "name": "6G", "fromMeters": 5000, "toMeters": null, "bg": "#020210", "banner": "Будущее. Ты в нём первый" }
+    { "id": 5, "name": "6G", "fromMeters": 5000, "toMeters": null, "bg": "#020210", "banner": "Будущее. Вы в нём первый" }
   ],
   "controls": {
     "tilt": {

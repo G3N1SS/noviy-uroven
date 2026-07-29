@@ -20,8 +20,8 @@ export function Rules() {
       </div>
 
       <p className="rules__goal">
-        Прыгай <b>вверх</b> по вышкам связи. Выше — круче. Упал за нижний край — начинаешь
-        сначала.
+        Прыгайте <b>вверх</b> по вышкам связи. Выше — круче. Упали за нижний край —
+        начинаете сначала.
       </p>
 
       <div className="rules__section">
@@ -34,7 +34,7 @@ export function Rules() {
           </span>
           <span className="rules__text">
             <span className="rules__row-title">Только влево-вправо</span>
-            <span className="rules__row-desc">Прыжок автоматический. Схему выбрал в настройках</span>
+            <span className="rules__row-desc">Прыжок автоматический. Схему выбрали в настройках</span>
           </span>
         </div>
       </div>
@@ -45,21 +45,21 @@ export function Rules() {
           <span className="rules__glyph"><span className="rules__bar rules__bar--vols" /></span>
           <span className="rules__text">
             <span className="rules__row-title">ВОЛС</span>
-            <span className="rules__row-desc">Надёжная, вечная. Твоя опора</span>
+            <span className="rules__row-desc">Надёжная, вечная. Ваша опора</span>
           </span>
         </div>
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__bar rules__bar--rrl" /></span>
           <span className="rules__text">
             <span className="rules__row-title">РРЛ</span>
-            <span className="rules__row-desc">Развалится сразу после прыжка. Не задерживайся</span>
+            <span className="rules__row-desc">Развалится сразу после прыжка. Не задерживайтесь</span>
           </span>
         </div>
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__bar rules__bar--moving" /></span>
           <span className="rules__text">
             <span className="rules__row-title">Движущаяся</span>
-            <span className="rules__row-desc">Ездит по горизонтали. Лови момент</span>
+            <span className="rules__row-desc">Ездит по горизонтали. Ловите момент</span>
           </span>
         </div>
         <div className="rules__row">
@@ -102,14 +102,14 @@ export function Rules() {
           <span className="rules__glyph"><span className="rules__glitch" /></span>
           <span className="rules__text">
             <span className="rules__row-title">Помеха</span>
-            <span className="rules__row-desc">Глитч-облако. Заденешь — отбросит вниз и заглушит управление</span>
+            <span className="rules__row-desc">Глитч-облако. Заденете — отбросит вниз и заглушит управление</span>
           </span>
         </div>
         <div className="rules__row">
           <span className="rules__glyph"><span className="rules__diamond" /></span>
           <span className="rules__text">
             <span className="rules__row-title">Кристаллы</span>
-            <span className="rules__row-desc">Собирай на награды. При смерти не сгорают</span>
+            <span className="rules__row-desc">Собирайте по пути. При смерти не сгорают</span>
           </span>
         </div>
       </div>
