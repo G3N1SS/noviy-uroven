@@ -4,7 +4,6 @@ import { Onboarding } from '../features/onboarding/Onboarding'
 import { Settings } from '../features/settings/Settings'
 import { Rules } from '../features/rules/Rules'
 import { Leaderboard } from '../features/leaderboard/Leaderboard'
-import { Developers } from '../features/developers/Developers'
 import { useUi } from '../shared/store/ui'
 
 // React отвечает за оболочку и роутинг экранов. Игровой мир целиком рендерит PixiJS
@@ -19,7 +18,6 @@ export function App() {
       {screen === 'settings' && <Settings />}
       {screen === 'rules' && <Rules />}
       {screen === 'leaderboard' && <Leaderboard />}
-      {screen === 'developers' && <Developers />}
     </>
   )
 }
