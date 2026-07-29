@@ -1,6 +1,6 @@
 /**
  * Проверка прод-пути Этапа 6 против реального Neon (драйвер @neondatabase/serverless, не pglite).
- * Гоняет полный цикл — схема, синк, anti-cheat, лидерборд, redeem, OTA — и УБИРАЕТ за собой
+ * Гоняет полный цикл — схема, синк, anti-cheat, лидерборд, OTA — и УБИРАЕТ за собой
  * все тестовые данные (префикс __verify_), чтобы не засорять реальный лидерборд.
  *
  * Запуск: DATABASE_URL=… npx tsx scripts/verify-neon.ts
@@ -8,7 +8,6 @@
 import { getDb } from '../api/_lib/db'
 import { syncSessions } from '../api/_lib/sessions'
 import { getLeaderboard } from '../api/_lib/leaderboard'
-import { redeem, getReward } from '../api/_lib/rewards'
 import { getServerConfig, setServerConfig } from '../api/_lib/config'
 
 const P = (s: string) => `__verify_${s}`
@@ -51,25 +50,14 @@ async function main() {
     myRank: lb.me?.rank,
   }
 
-  // 4) Redeem: заработать и купить (идемпотентно)
-  const buyer = P('buyer')
-  await syncSessions(db, buyer, [
-    { id: P('s3'), height: 900, crystals: 600, epoch: 2, boostersUsed: [], timestamp: now, durationMs: 60000, jumps: 90 },
-  ])
-  const gb1 = getReward('gb1')!
-  const r1 = await redeem(db, buyer, 'gb1', P('rd1'))
-  const r2 = await redeem(db, buyer, 'gb1', P('rd1')) // повтор
-  out.redeem = { status: r1.status, spent: r1.profile.crystalsSpent, balance: r1.profile.crystals, price: gb1.price, replaySpent: r2.profile.crystalsSpent }
-
-  // 5) OTA: задать оверрайд, прочитать, снять
+  // 4) OTA: задать оверрайд, прочитать, снять
   await setServerConfig(db, { jump: { heightPx: 777 } })
   const cfgSet = await getServerConfig(db)
   await setServerConfig(db, null)
   const cfgClear = await getServerConfig(db)
   out.ota = { set: cfgSet.balance, clearedNull: cfgClear.balance === null }
 
-  // 6) ОЧИСТКА тестовых данных (иначе засорим реальный лидерборд)
-  await db.query(`DELETE FROM redemptions WHERE player_id LIKE '__verify_%'`)
+  // 5) ОЧИСТКА тестовых данных (иначе засорим реальный лидерборд)
   await db.query(`DELETE FROM sessions WHERE player_id LIKE '__verify_%'`)
   await db.query(`DELETE FROM players WHERE id LIKE '__verify_%'`)
   const leftover = await db.query<{ n: number }>(

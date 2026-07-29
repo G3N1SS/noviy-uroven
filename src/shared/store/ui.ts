@@ -19,7 +19,6 @@ export type Screen =
   | 'menu'
   | 'settings'
   | 'rules'
-  | 'shop'
   | 'leaderboard'
   | 'developers'
   | 'playing'
@@ -41,10 +40,9 @@ interface UiState {
   enterGame: () => void
   /** Пауза/Game Over → меню. */
   openMenu: () => void
-  /** Меню → под-экраны (настройки, правила, магазин) и обратно в меню. */
+  /** Меню → под-экраны (настройки, правила, лидерборд, разработчики) и обратно в меню. */
   openSettings: () => void
   openRules: () => void
-  openShop: () => void
   openLeaderboard: () => void
   openDevelopers: () => void
   backToMenu: () => void
@@ -79,7 +77,6 @@ export const useUi = create<UiState>((set, get) => ({
   },
   openSettings: () => set({ screen: 'settings' }),
   openRules: () => set({ screen: 'rules' }),
-  openShop: () => set({ screen: 'shop' }),
   openLeaderboard: () => set({ screen: 'leaderboard' }),
   openDevelopers: () => set({ screen: 'developers' }),
   backToMenu: () => set({ screen: 'menu' }),

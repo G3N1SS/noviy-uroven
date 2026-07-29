@@ -67,25 +67,6 @@ export function fetchConfig(): Promise<ServerConfig> {
   return request<ServerConfig>('/config')
 }
 
-export type RedeemStatus = 'ok' | 'insufficient' | 'unknown_reward'
-export interface RedeemResponse {
-  status: RedeemStatus
-  profile: ServerProfile
-  reward?: { id: string; title: string; price: number }
-}
-
-/** Обмен кристаллов на награду. redemptionId — UUID идемпотентности (повтор не спишет дважды). */
-export function redeemReward(
-  playerId: string,
-  rewardId: string,
-  redemptionId: string,
-): Promise<RedeemResponse> {
-  return request<RedeemResponse>('/rewards/redeem', {
-    method: 'POST',
-    body: JSON.stringify({ playerId, rewardId, redemptionId }),
-  })
-}
-
 export type LbScope = 'global' | 'city' | 'friends'
 export type LbPeriod = 'week' | 'all'
 

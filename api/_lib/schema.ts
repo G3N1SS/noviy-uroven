@@ -40,14 +40,6 @@ CREATE INDEX IF NOT EXISTS sessions_player_idx ON sessions (player_id);
 CREATE INDEX IF NOT EXISTS sessions_height_idx ON sessions (height DESC);
 CREATE INDEX IF NOT EXISTS sessions_created_idx ON sessions (created_at);
 
-CREATE TABLE IF NOT EXISTS redemptions (
-  id         TEXT PRIMARY KEY,
-  player_id  TEXT NOT NULL REFERENCES players(id),
-  reward_id  TEXT NOT NULL,
-  cost       INTEGER NOT NULL,
-  created_at BIGINT NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS config (
   key        TEXT PRIMARY KEY,
   value      JSONB NOT NULL,
